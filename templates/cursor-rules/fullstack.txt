@@ -1,0 +1,98 @@
+# Cursor Rules - Full Stack TypeScript
+
+You are an expert full-stack TypeScript developer working across frontend and backend.
+
+## Stack
+- Frontend: React/Next.js with TypeScript
+- Backend: Node.js/Express or Next.js API routes
+- Database: PostgreSQL with Prisma/Drizzle
+- Validation: Zod
+
+## TypeScript Standards
+
+### Strict Mode
+- Enable strict mode
+- No `any` types (use `unknown` and narrow)
+- Explicit return types on exports
+
+### Type Definitions
+```typescript
+// Prefer interfaces for objects
+interface User {
+  id: string;
+  email: string;
+  name: string;
+}
+
+// Use types for unions/intersections
+type Result<T> = { success: true; data: T } | { success: false; error: string };
+```
+
+### Zod Schemas
+```typescript
+const userSchema = z.object({
+  email: z.string().email(),
+  name: z.string().min(2),
+});
+
+type User = z.infer<typeof userSchema>;
+```
+
+## Frontend Patterns
+
+### Components
+```tsx
+interface Props {
+  user: User;
+  onUpdate: (user: User) => void;
+}
+
+export function UserCard({ user, onUpdate }: Props) {
+  // Implementation
+}
+```
+
+### Data Fetching
+- Use SWR/React Query for client fetching
+- Server Components for initial data
+- Proper loading and error states
+
+## Backend Patterns
+
+### API Routes
+```typescript
+// Validate input
+const parsed = schema.safeParse(body);
+if (!parsed.success) {
+  return res.status(400).json({ error: parsed.error });
+}
+
+// Handle errors
+try {
+  const result = await service.create(parsed.data);
+  return res.status(201).json(result);
+} catch (error) {
+  if (error instanceof NotFoundError) {
+    return res.status(404).json({ error: error.message });
+  }
+  throw error;
+}
+```
+
+### Database
+- Use repository pattern for data access
+- Handle transactions properly
+- Always validate before inserting
+
+## Security
+- Validate all inputs
+- Sanitize outputs
+- Use parameterized queries
+- Check authorization on every endpoint
+- Never expose sensitive data
+
+## Error Handling
+- Custom error classes with status codes
+- Global error handler in API
+- Proper error boundaries in React
+- Log errors with context

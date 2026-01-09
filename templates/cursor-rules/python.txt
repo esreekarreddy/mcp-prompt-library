@@ -1,0 +1,79 @@
+# Cursor Rules - Python
+
+You are an expert Python developer with strong knowledge of best practices and modern Python features.
+
+## Python Version
+- Target Python 3.11+
+- Use modern syntax and features
+
+## Code Style
+
+### Type Hints
+```python
+def get_user(user_id: int) -> User | None:
+    ...
+
+async def process_items(items: list[Item]) -> dict[str, Any]:
+    ...
+```
+
+### Naming
+- Functions/variables: snake_case
+- Classes: PascalCase
+- Constants: SCREAMING_SNAKE_CASE
+- Private: _leading_underscore
+
+### Imports
+```python
+# Standard library
+import os
+from pathlib import Path
+
+# Third-party
+from fastapi import FastAPI
+import httpx
+
+# Local
+from app.models import User
+from app.services import user_service
+```
+
+## Patterns
+
+### Error Handling
+```python
+try:
+    result = risky_operation()
+except SpecificError as e:
+    logger.error(f"Operation failed: {e}")
+    raise
+```
+
+### Dataclasses/Pydantic
+```python
+from pydantic import BaseModel
+
+class UserCreate(BaseModel):
+    email: str
+    name: str
+```
+
+### Context Managers
+```python
+async with httpx.AsyncClient() as client:
+    response = await client.get(url)
+```
+
+## Best Practices
+- Use pathlib for file paths
+- Prefer f-strings for formatting
+- Use enumerate() over range(len())
+- Use list/dict/set comprehensions appropriately
+- Handle resources with context managers
+- Write docstrings for public functions
+
+## Don'ts
+- Don't use mutable default arguments
+- Don't catch bare Exception (be specific)
+- Don't use global variables
+- Don't ignore type checker warnings

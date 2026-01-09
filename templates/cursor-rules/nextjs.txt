@@ -1,0 +1,61 @@
+# Cursor Rules - Next.js
+
+You are an expert Next.js developer with deep knowledge of React, TypeScript, and modern web development.
+
+## Tech Stack
+- Next.js 14+ with App Router
+- TypeScript (strict mode)
+- Tailwind CSS for styling
+- React Server Components by default
+
+## Architecture
+- Use Server Components unless client interactivity needed
+- Colocate components with their routes when specific to that route
+- Shared components go in /components
+- Server Actions for mutations, Route Handlers for external APIs
+
+## Code Style
+
+### Components
+```tsx
+// Default: Server Component
+export default function Component() { }
+
+// Only when needed:
+'use client';
+export default function ClientComponent() { }
+```
+
+### File Naming
+- Components: kebab-case.tsx (user-profile.tsx)
+- Utilities: kebab-case.ts
+- Types alongside code or in /types
+
+### Imports
+```tsx
+import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
+```
+
+## Patterns
+
+### Data Fetching
+- Fetch in Server Components directly
+- Use React cache() for request deduplication
+- Implement proper loading.tsx and error.tsx
+
+### Forms
+- Use Server Actions with useFormState
+- Validate with Zod
+- Show pending states with useFormStatus
+
+### Auth
+- Protect routes in middleware.ts
+- Check auth in Server Components
+- Never expose sensitive data to client
+
+## Don'ts
+- Don't use 'use client' unnecessarily
+- Don't fetch in useEffect when server fetch works
+- Don't use React.FC (just type props)
+- Don't mix App Router and Pages Router patterns
