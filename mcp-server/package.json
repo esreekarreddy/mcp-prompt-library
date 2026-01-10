@@ -1,5 +1,5 @@
 {
-  "name": "@ai-library/mcp-server",
+  "name": "mcp-prompt-library",
   "version": "1.0.0",
   "description": "MCP server for AI prompt library - auto-suggests prompts, chains workflows, and grows your library",
   "type": "module",
@@ -22,10 +22,25 @@
     "model-context-protocol",
     "ai",
     "prompts",
-    "library"
+    "library",
+    "claude",
+    "opencode",
+    "cursor",
+    "llm",
+    "prompt-engineering",
+    "ai-assistant",
+    "developer-tools"
   ],
-  "author": "",
+  "author": "Sreekar Reddy",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sreekarreddy/mcp-prompt-library.git"
+  },
+  "homepage": "https://github.com/sreekarreddy/mcp-prompt-library#readme",
+  "bugs": {
+    "url": "https://github.com/sreekarreddy/mcp-prompt-library/issues"
+  },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.25.2",
     "chokidar": "^5.0.0",

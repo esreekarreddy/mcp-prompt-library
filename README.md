@@ -1,281 +1,360 @@
-# AI Library
+<p align="center">
+  <h1 align="center">MCP Prompt Library</h1>
+  <p align="center">
+    <strong>100+ curated prompts, workflows, and coding standards for AI-assisted development</strong>
+  </p>
+</p>
 
-> Your personal goldmine of prompts, skills, and instructions for AI-assisted development.
+<p align="center">
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="License"></a>
+  <a href="https://nodejs.org"><img src="https://img.shields.io/badge/node-%3E%3D18.0.0-brightgreen.svg" alt="Node.js"></a>
+  <a href="https://modelcontextprotocol.io"><img src="https://img.shields.io/badge/MCP-compatible-purple.svg" alt="MCP Compatible"></a>
+  <img src="https://img.shields.io/badge/tests-99%20passed-success.svg" alt="Tests">
+</p>
 
-A centralized reference library with 80+ prompts, skills, templates, and workflows. Includes an **MCP Server** for automatic prompt enhancement in Claude, OpenCode, and Cursor.
+<p align="center">
+  <a href="#quick-start">Quick Start</a> •
+  <a href="#features">Features</a> •
+  <a href="#mcp-server">MCP Server</a> •
+  <a href="#library-contents">Library</a> •
+  <a href="#integrations">Integrations</a>
+</p>
+
+---
+
+## Why This Exists
+
+AI assistants are powerful, but they're only as good as the prompts you give them. Most developers:
+
+- **Repeat the same prompts** across projects
+- **Forget effective prompts** they used before  
+- **Struggle to compose** complex multi-step workflows
+- **Lack consistency** in AI-assisted development patterns
+
+**MCP Prompt Library** solves this by providing:
+
+| What | How |
+|------|-----|
+| **100+ battle-tested prompts** | Organized by development phase (planning, development, quality, design) |
+| **MCP server with 15 tools** | Direct integration with Claude, OpenCode, Cursor, and any MCP-compatible client |
+| **Smart suggestions** | AI recommends prompts based on what you're doing |
+| **Workflow chains** | Multi-step guided processes for features, bugs, refactoring, security |
+| **Composable snippets** | Mix modifiers like `ultrathink` + `security-first` on any prompt |
 
 ---
 
 ## Quick Start
 
-### Option 1: MCP Server (Recommended)
-
-The MCP server gives Claude **automatic access** to all prompts and can auto-enhance your requests.
+### 1. Clone & Build
 
 ```bash
-# 1. Install and build
-cd mcp-server
-npm install
-npm run build
-
-# 2. Add to Claude Desktop (~/Library/Application Support/Claude/claude_desktop_config.json)
-{
-  "mcpServers": {
-    "ai-library": {
-      "command": "node",
-      "args": ["/path/to/ai-library/mcp-server/dist/index.js"]
-    }
-  }
-}
-
-# 3. Restart Claude Desktop
+git clone https://github.com/sreekarreddy/mcp-prompt-library.git
+cd mcp-prompt-library/mcp-server
+npm install && npm run build
 ```
 
-**Enable Auto-Enhancement:** Add this to your project's `CLAUDE.md`:
+### 2. Configure Your AI Tool
 
-```markdown
-## AI Library Integration
+See [Integrations](#integrations) for your specific tool (OpenCode, Claude Desktop, Cursor).
 
-For any substantial task, ALWAYS call `enhance_prompt` first.
-Use `get_prompt("ultrathink")` for complex problems.
+### 3. Start Using
+
+Once connected, your AI assistant has access to all prompts:
+
 ```
-
-See `templates/claude-md/auto-enhance.md` for the full integration guide.
-
-### Option 2: Manual Copy-Paste
-
-```bash
-# Reference this folder from any project
-export AI_LIBRARY="$HOME/Desktop/githubProjects/ai-library"
-
-# Copy a prompt to clipboard (macOS)
-cat $AI_LIBRARY/prompts/planning/prd-generator.md | pbcopy
-
-# Symlink CLAUDE.md to a project
-ln -s $AI_LIBRARY/templates/claude-md/nextjs-app.md ./CLAUDE.md
-```
-
-### Option 3: CLI Tool
-
-```bash
-cd mcp-server
-
-# List all prompts
-node dist/cli.js list
-
-# Search for prompts
-node dist/cli.js search "debugging"
-
-# Get a specific prompt
-node dist/cli.js get ultrathink
-
-# Library stats
-node dist/cli.js stats
+"suggest prompts for what I'm doing"
+"get the PRD generator prompt"
+"start the new-feature chain"
+"compose prd-generator with ultrathink"
 ```
 
 ---
 
-## Structure
+## Features
 
-| Folder | Purpose | When to Use |
-|--------|---------|-------------|
-| `prompts/` | Ready-to-paste prompts | Copy directly into chat |
-| `skills/` | Claude Skills (behavioral) | Add to `~/.claude/` or project `.claude/` |
-| `instructions/` | Reusable system prompts | Combine into CLAUDE.md or custom instructions |
-| `templates/` | Project scaffolding | Copy to new projects (CLAUDE.md, .cursorrules) |
-| `chains/` | Multi-step workflows | Complex tasks requiring multiple prompts |
-| `snippets/` | Composable add-ons | Append to any prompt for modifications |
-| `contexts/` | Reference material | Feed to AI for background knowledge |
-| `examples/` | Gold-standard outputs | Show AI what good looks like |
+### Smart Intent Detection
 
----
+Tell your AI what you're doing, and it suggests the right prompts:
 
-## Folder Details
+| You Say | It Suggests |
+|---------|-------------|
+| "I need to build a new feature" | PRD generator, new-feature chain |
+| "Stuck on a bug" | Deep debugger, debugging skill, bug-fix chain |
+| "Security review before launch" | Security audit, security-hardening chain |
+| "This code is a mess" | Code cleaner, refactoring skill, refactor chain |
+| "Complex architecture decision" | Megathink modifier, senior-engineer persona |
 
-### `prompts/`
-Copy-paste ready prompts organized by development phase:
-- **planning/** - PRD generation, architecture analysis, scope definition
-- **development/** - Debugging, code cleanup, tech debt
-- **quality/** - Security audits, testing, pre-launch checks
-- **design/** - Design systems, UI/UX
+### Workflow Chains
 
-### `skills/`
-Claude Skills that define AI behavior for specific tasks. Drop into your `~/.claude/` folder or project-level `.claude/` folder.
+Multi-step guided workflows for complex tasks:
 
-### `instructions/`
-Reusable instruction sets:
-- **personas/** - Role-based AI behaviors (senior engineer, security expert)
-- **standards/** - Coding standards by language/framework
-- **workflows/** - Process-specific instructions (TDD, PR review)
+| Chain | Steps | Use Case |
+|-------|-------|----------|
+| `new-feature` | 7 | From PRD to deployment |
+| `bug-fix` | 5 | Systematic debugging to resolution |
+| `refactor` | 6 | Safe refactoring with verification |
+| `security-hardening` | 5 | Comprehensive security review |
+| `production-launch` | 6 | Pre-launch checklist to deployment |
 
-### `templates/`
-Project scaffolding files:
-- **claude-md/** - CLAUDE.md templates for different project types
-- **cursor-rules/** - .cursorrules for Cursor IDE
-- **copilot/** - GitHub Copilot instruction files
-- **docs/** - Document templates (PRD, ADR, runbooks)
-
-### `chains/`
-Multi-step workflows that combine multiple prompts in sequence for complex tasks.
-
-### `snippets/`
-Small, composable pieces to enhance any prompt:
-- **modifiers/** - Change AI behavior (ultrathink, step-by-step)
-- **output-formats/** - Specify response format (JSON, table, checklist)
-- **constraints/** - Add boundaries (MVP only, security first)
-
-### `contexts/`
-Reference documentation to provide AI with background knowledge:
-- **stacks/** - Tech stack primers
-- **patterns/** - Architecture patterns
-- **guides/** - Best practices
-
-### `examples/`
-Gold-standard outputs to show AI what good looks like.
-
----
-
-## Usage Patterns
-
-### 1. Copy a prompt
 ```bash
-cat prompts/planning/prd-generator.md | pbcopy
+# Start a chain
+node dist/cli.js chains           # List available chains
+start_chain chain="new-feature"   # Via MCP tool
 ```
 
-### 2. Compose prompts with snippets
+### Composable Prompts
+
+Combine any prompts with modifiers:
+
 ```bash
-# Combine a prompt with a modifier
-cat prompts/development/debugger.md snippets/modifiers/ultrathink.md | pbcopy
+# CLI
+node dist/cli.js compose prd-generator ultrathink security-first
+
+# MCP Tool  
+compose_prompt items=["prd-generator", "ultrathink", "security-first"]
 ```
 
-### 3. Set up a new project
-```bash
-# Copy CLAUDE.md template
-cp templates/claude-md/nextjs-app.md /path/to/project/CLAUDE.md
+### Quick Modifiers
 
-# Copy cursor rules
-cp templates/cursor-rules/nextjs.txt /path/to/project/.cursorrules
-```
+Instant prompt enhancers:
 
-### 4. Reference in Claude Code
-```bash
-# In your project's CLAUDE.md, reference this library:
-# See: ~/Desktop/githubProjects/ai-library/instructions/standards/typescript.md
-```
+| Modifier | Effect |
+|----------|--------|
+| `ultrathink` | Deep analysis with extended reasoning |
+| `megathink` | Maximum thinking for architecture decisions |
+| `critique` | Harsh, unfiltered feedback mode |
+| `debug` | Systematic debugging approach |
+| `plan` | Planning mode - no code yet |
+| `secure` | Security-focused review |
+| `simplify` | Explain like I'm 12 |
 
 ---
 
-## File Format Convention
+## MCP Server
 
-All prompt files follow this structure:
+The MCP (Model Context Protocol) server exposes **15 tools** to your AI assistant:
 
-```markdown
-# Prompt Name
-
-> One-line description
-
-## Variables
-- `[variable]` - what to replace
-
-## Prompt
-\`\`\`
-The actual prompt...
-\`\`\`
-
-## Usage Tips
-- When to use
-- What to combine with
-
-## Pairs Well With
-- Related prompts/snippets
-```
-
----
-
-## Contributing to Your Library
-
-### Adding a new prompt
-1. Create file in appropriate `prompts/` subfolder
-2. Follow the file format convention
-3. Update the section's `_index.md`
-
-### Creating a new skill
-1. Add to `skills/` with clear trigger conditions
-2. Test in a project before committing
-
-### Updating templates
-1. Version your templates (or use git history)
-2. Document breaking changes
-
----
-
-## MCP Server Tools
-
-When using the MCP server, Claude has access to these tools:
-
+### Library Tools
 | Tool | Purpose |
 |------|---------|
-| `enhance_prompt` | **Auto-enhance any request** - Call this first for better results |
-| `get_prompt` | Fetch any prompt, skill, or template by name |
-| `search_prompts` | Search the library by keywords |
-| `suggest_prompts` | Get AI-recommended prompts for your task |
-| `run_chain` | Execute multi-step workflows |
-| `compose_prompt` | Combine multiple prompts |
-| `library_stats` | See what's in the library |
+| `get_prompt` | Fetch any prompt by name (fuzzy matching works) |
+| `search_prompts` | Search library by keywords |
+| `suggest_prompts` | Smart suggestions based on your intent |
+| `enhance_prompt` | Analyze request and suggest approach + relevant prompts |
 | `save_to_library` | Save new prompts to the library |
+| `library_stats` | Library statistics |
+| `random_prompt` | Random prompt for inspiration |
 
-### Auto-Enhancement Flow
+### Chain Tools
+| Tool | Purpose |
+|------|---------|
+| `list_chains` | View available workflow chains |
+| `start_chain` | Begin a multi-step workflow |
+| `chain_next` | Advance to next step |
+| `chain_status` | View workflow progress |
+| `chain_step` | Jump to specific step |
+
+### Utility Tools
+| Tool | Purpose |
+|------|---------|
+| `compose_prompt` | Combine multiple prompts |
+| `quick_prompt` | Instant one-liner modifiers |
+| `detect_context` | Analyze project → suggest stack-specific prompts |
+
+### How It Works
 
 ```
 You: "Build a user authentication system"
         ↓
-Claude calls: enhance_prompt("Build a user authentication system")
+AI calls: suggest_prompts("Build a user authentication system")
         ↓
-Returns: security-review, new-feature chain, auth patterns
+Returns: security-audit, new-feature chain, auth patterns
         ↓
-Claude calls: get_prompt("security-review")
+AI calls: start_chain("new-feature")  
         ↓
-Claude applies security patterns while building
+AI guides you through: PRD → Architecture → Implementation → Testing → Deploy
 ```
 
 ---
 
-## Quick Reference
+## Library Contents
 
-### Most Used Prompts
-| Prompt | Path | Use Case |
-|--------|------|----------|
-| PRD Generator | `prompts/planning/prd-generator.md` | Starting a new feature |
-| Deep Debugger | `prompts/analysis/deep-debugger.md` | Systematic debugging |
-| Security Audit | `prompts/quality/security-audit.md` | Pre-production check |
-| Ultrathink | `snippets/modifiers/ultrathink.md` | Deep analysis mode |
-| Megathink | `snippets/modifiers/megathink.md` | Maximum thinking for architecture |
+**100+ curated resources** across 8 categories:
 
-### Essential Templates
-| Template | Path | Use Case |
-|----------|------|----------|
-| Full CLAUDE.md | `templates/claude-md/full.md` | Comprehensive project setup |
-| Auto-Enhance | `templates/claude-md/auto-enhance.md` | Enable auto-enhancement |
-| Next.js CLAUDE.md | `templates/claude-md/nextjs-app.md` | New Next.js project |
-| Minimal CLAUDE.md | `templates/claude-md/minimal.md` | Quick project setup |
-
-### Skills
-| Skill | Path | Use Case |
-|-------|------|----------|
-| Code Review Advanced | `skills/code-review-advanced.md` | 4-lens comprehensive review |
-| Senior Engineer Persona | `instructions/personas/senior-engineer.md` | Expert-level guidance |
-| TypeScript React Standards | `instructions/standards/typescript-react.md` | Full stack TS/React standards |
+```
+mcp-prompt-library/
+├── prompts/          (18) - Copy-paste ready prompts
+│   ├── planning/          PRD generator, scope killer, architecture
+│   ├── development/       Debugger, code cleaner, tech debt
+│   ├── quality/           Security audit, testing, pre-launch
+│   ├── design/            Design system extractor
+│   ├── analysis/          Deep debugger
+│   └── agentic/           Context manager, agentic loop, test-driven fix
+├── skills/           (9)  - AI behavior definitions
+│   └── code-review, debugging, testing, refactoring, documentation...
+├── instructions/     (19) - Reusable system prompts
+│   ├── personas/          Senior engineer, security expert, DevOps, UX
+│   ├── standards/         TypeScript, React, Python, Go, Rust, FastAPI, Next.js
+│   └── workflows/         TDD, PR review, incident response, feature development
+├── templates/        (14) - Project scaffolding
+│   ├── claude-md/         CLAUDE.md for Next.js, Python, Node.js, CLI tools
+│   ├── cursor-rules/      .cursorrules for various stacks
+│   ├── copilot/           GitHub Copilot instructions
+│   └── docs/              PRD, ADR, API spec, runbook templates
+├── chains/           (6)  - Multi-step workflows
+│   └── new-feature, bug-fix, refactor, security-hardening, production-launch
+├── snippets/         (18) - Composable modifiers
+│   ├── modifiers/         ultrathink, megathink, step-by-step, meta-cot
+│   ├── output-formats/    JSON, markdown table, checklist, numbered list
+│   └── constraints/       Security first, MVP only, read-only, no external deps
+├── contexts/         (9)  - Reference documentation
+│   ├── stacks/            Next.js 14, FastAPI, Prisma
+│   ├── patterns/          MCP server patterns, agentic coding
+│   └── guides/            API design, error handling
+└── examples/         (3)  - Gold-standard samples
+    └── PRDs, architecture docs, code reviews
+```
 
 ---
 
-## Pro Tips
+## Integrations
 
-1. **Symlink over copy** - Keep templates in sync with source
-2. **Compose snippets** - Combine modifiers for powerful prompts
-3. **Version with git** - Track what works, revert what doesn't
-4. **Project-specific tweaks** - Copy then customize for edge cases
-5. **Review examples** - Before asking AI, show it what good looks like
+### OpenCode
+
+Add to `~/.opencode/config.json`:
+
+```json
+{
+  "mcp": {
+    "ai-library": {
+      "type": "local",
+      "command": [
+        "node",
+        "/path/to/mcp-prompt-library/mcp-server/dist/index.js"
+      ],
+      "enabled": true
+    }
+  }
+}
+```
+
+### Claude Desktop
+
+Add to `~/Library/Application Support/Claude/claude_desktop_config.json`:
+
+```json
+{
+  "mcpServers": {
+    "ai-library": {
+      "command": "node",
+      "args": ["/path/to/mcp-prompt-library/mcp-server/dist/index.js"]
+    }
+  }
+}
+```
+
+### Cursor
+
+Add to `.cursor/mcp.json` in your project:
+
+```json
+{
+  "mcpServers": {
+    "ai-library": {
+      "command": "node", 
+      "args": ["/path/to/mcp-prompt-library/mcp-server/dist/index.js"]
+    }
+  }
+}
+```
+
+### VS Code + GitHub Copilot
+
+Copy the prompt files to your workspace:
+
+```bash
+cp -r .github/prompts /path/to/your-project/.github/prompts
+```
 
 ---
 
-*This is your goldmine. Keep it polished.*
+## CLI Usage
+
+Use the library directly from your terminal:
+
+```bash
+cd mcp-server
+
+# Get a specific prompt
+node dist/cli.js get prd-generator
+
+# Search prompts  
+node dist/cli.js search "security"
+
+# Get AI-powered suggestions
+node dist/cli.js suggest "I need to refactor this messy code"
+
+# Combine prompts
+node dist/cli.js compose prd-generator ultrathink step-by-step
+
+# View workflow chains
+node dist/cli.js chains
+
+# Library statistics
+node dist/cli.js stats
+
+# Random prompt for inspiration
+node dist/cli.js random
+```
+
+---
+
+## Development
+
+```bash
+cd mcp-server
+
+npm install        # Install dependencies
+npm run build      # Build TypeScript
+npm run test       # Run tests (99 tests)
+npm run dev        # Watch mode
+npm run typecheck  # Type checking only
+```
+
+### Architecture
+
+- **TypeScript** - Full type safety
+- **Vitest** - 99 tests with fast execution
+- **Zod** - Runtime validation for configs
+- **chokidar** - Hot-reload when library files change
+- **MCP SDK** - Model Context Protocol integration
+
+---
+
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
+
+Ideas for contributions:
+- Add prompts that worked well for you
+- Add workflow chains for common tasks
+- Add coding standards for new languages/frameworks
+- Improve existing prompts with better examples
+
+---
+
+## License
+
+MIT - see [LICENSE](LICENSE)
+
+---
+
+## Acknowledgments
+
+Built with the [Model Context Protocol](https://modelcontextprotocol.io) by Anthropic.
+
+---
+
+<p align="center">
+  <strong>Your AI is only as good as your prompts. Keep them polished.</strong>
+</p>
