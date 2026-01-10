@@ -1,7 +1,7 @@
 <p align="center">
   <h1 align="center">MCP Prompt Library</h1>
   <p align="center">
-    <strong>100+ curated prompts, workflows, and coding standards for AI-assisted development</strong>
+    <strong>90+ curated prompts, workflows, and coding standards for AI-assisted development</strong>
   </p>
 </p>
 
@@ -35,7 +35,7 @@ AI assistants are powerful, but they're only as good as the prompts you give the
 
 | What | How |
 |------|-----|
-| **100+ battle-tested prompts** | Organized by development phase (planning, development, quality, design) |
+| **90+ battle-tested prompts** | Organized by development phase (planning, development, quality, design) |
 | **MCP server with 15 tools** | Direct integration with Claude, OpenCode, Cursor, and any MCP-compatible client |
 | **Smart suggestions** | AI recommends prompts based on what you're doing |
 | **Workflow chains** | Multi-step guided processes for features, bugs, refactoring, security |
@@ -48,7 +48,7 @@ AI assistants are powerful, but they're only as good as the prompts you give the
 ### 1. Clone & Build
 
 ```bash
-git clone https://github.com/sreekarreddy/mcp-prompt-library.git
+git clone https://github.com/esreekarreddy/mcp-prompt-library.git
 cd mcp-prompt-library/mcp-server
 npm install && npm run build
 ```
@@ -91,10 +91,10 @@ Multi-step guided workflows for complex tasks:
 | Chain | Steps | Use Case |
 |-------|-------|----------|
 | `new-feature` | 7 | From PRD to deployment |
-| `bug-fix` | 5 | Systematic debugging to resolution |
+| `bug-fix` | 7 | Systematic debugging to resolution |
 | `refactor` | 6 | Safe refactoring with verification |
-| `security-hardening` | 5 | Comprehensive security review |
-| `production-launch` | 6 | Pre-launch checklist to deployment |
+| `security-hardening` | 7 | Comprehensive security review |
+| `production-launch` | 7 | Pre-launch checklist to deployment |
 
 ```bash
 # Start a chain
@@ -179,7 +179,7 @@ AI guides you through: PRD → Architecture → Implementation → Testing → D
 
 ## Library Contents
 
-**100+ curated resources** across 8 categories:
+**90+ curated resources** across 8 categories:
 
 ```
 mcp-prompt-library/
@@ -189,21 +189,22 @@ mcp-prompt-library/
 │   ├── quality/           Security audit, testing, pre-launch
 │   ├── design/            Design system extractor
 │   ├── analysis/          Deep debugger
-│   └── agentic/           Context manager, agentic loop, test-driven fix
-├── skills/           (9)  - AI behavior definitions
+│   ├── agentic/           Context manager, agentic loop, test-driven fix
+│   └── system/            Master system prompt for AI setup
+├── skills/           (8)  - AI behavior definitions
 │   └── code-review, debugging, testing, refactoring, documentation...
-├── instructions/     (19) - Reusable system prompts
+├── instructions/     (18) - Reusable system prompts
 │   ├── personas/          Senior engineer, security expert, DevOps, UX
 │   ├── standards/         TypeScript, React, Python, Go, Rust, FastAPI, Next.js
 │   └── workflows/         TDD, PR review, incident response, feature development
-├── templates/        (14) - Project scaffolding
+├── templates/        (16) - Project scaffolding
 │   ├── claude-md/         CLAUDE.md for Next.js, Python, Node.js, CLI tools
 │   ├── cursor-rules/      .cursorrules for various stacks
 │   ├── copilot/           GitHub Copilot instructions
 │   └── docs/              PRD, ADR, API spec, runbook templates
-├── chains/           (6)  - Multi-step workflows
+├── chains/           (5)  - Multi-step workflows
 │   └── new-feature, bug-fix, refactor, security-hardening, production-launch
-├── snippets/         (18) - Composable modifiers
+├── snippets/         (17) - Composable modifiers
 │   ├── modifiers/         ultrathink, megathink, step-by-step, meta-cot
 │   ├── output-formats/    JSON, markdown table, checklist, numbered list
 │   └── constraints/       Security first, MVP only, read-only, no external deps

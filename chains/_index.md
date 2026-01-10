@@ -10,11 +10,11 @@ Chains are sequences of prompts designed to be used together for complex tasks t
 
 | Chain | Steps | Use Case |
 |-------|-------|----------|
-| [new-feature.md](new-feature.md) | 5 | Building a new feature from idea to deployment |
-| [bug-fix.md](bug-fix.md) | 4 | Systematic debugging and fixing |
-| [refactor.md](refactor.md) | 4 | Safe, incremental refactoring |
-| [security-hardening.md](security-hardening.md) | 4 | Securing an application |
-| [production-launch.md](production-launch.md) | 5 | Pre-launch preparation |
+| [new-feature.md](new-feature.md) | 7 | Building a new feature from idea to deployment |
+| [bug-fix.md](bug-fix.md) | 7 | Systematic debugging and fixing |
+| [refactor.md](refactor.md) | 6 | Safe, incremental refactoring |
+| [security-hardening.md](security-hardening.md) | 7 | Securing an application |
+| [production-launch.md](production-launch.md) | 7 | Pre-launch preparation |
 
 ## How to Use
 

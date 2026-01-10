@@ -6,6 +6,7 @@
 
 | Prompt | Category | Use When |
 |--------|----------|----------|
+| [Master System Prompt](system/master-system-prompt.md) | System | Setting up any AI assistant |
 | [PRD Generator](planning/prd-generator.md) | Planning | Starting a new feature/product |
 | [Architecture Analyzer](planning/architecture-analyzer.md) | Planning | Understanding existing codebase |
 | [Implementation Plan](planning/implementation-plan.md) | Planning | Before writing code |
@@ -54,6 +55,9 @@
 - [agentic-loop.md](agentic/agentic-loop.md) - Self-improving AI agent loop
 - [context-manager.md](agentic/context-manager.md) - Managing AI context windows
 - [test-driven-fix.md](agentic/test-driven-fix.md) - TDD-based bug fixing
+
+### System (AI Setup)
+- [master-system-prompt.md](system/master-system-prompt.md) - Complete AI assistant system prompt
 
 ## Recommended Combinations
 

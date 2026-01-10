@@ -1,3 +1,11 @@
+---
+title: Master System Prompt
+description: The complete AI assistant system prompt - load this into any AI tool for maximum productivity. Covers identity, agentic capabilities, thinking modes, code standards, and communication style.
+tags: [system-prompt, master, identity, agentic, coding-standards, complete]
+aliases: [system, master, brain, complete-system, ai-system]
+version: 4.0.0
+---
+
 # AI Library System Prompt
 
 > The master brain that orchestrates all prompts, skills, and workflows. This file should be loaded into any AI assistant's system context for maximum productivity.

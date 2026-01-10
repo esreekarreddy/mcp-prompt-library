@@ -191,10 +191,10 @@ Multi-step guided workflows:
 | Chain | Steps | Use Case |
 |-------|-------|----------|
 | `new-feature` | 7 | From PRD to deployment |
-| `bug-fix` | 5 | Systematic debugging to resolution |
+| `bug-fix` | 7 | Systematic debugging to resolution |
 | `refactor` | 6 | Safe refactoring with verification |
-| `security-hardening` | 5 | Comprehensive security review |
-| `production-launch` | 6 | Pre-launch to deployment |
+| `security-hardening` | 7 | Comprehensive security review |
+| `production-launch` | 7 | Pre-launch to deployment |
 
 ```
 start_chain chain="new-feature"
@@ -221,12 +221,12 @@ start_chain chain="new-feature"
 
 ```
 mcp-prompt-library/
-├── prompts/          (18) - Copy-paste ready prompts
-├── snippets/         (18) - Composable modifiers
-├── templates/        (14) - Project scaffolding
-├── skills/           (9)  - AI behavior definitions
-├── instructions/     (19) - Personas & standards
-├── chains/           (6)  - Multi-step workflows
+├── prompts/          (17) - Copy-paste ready prompts
+├── snippets/         (17) - Composable modifiers
+├── templates/        (16) - Project scaffolding
+├── skills/           (8)  - AI behavior definitions
+├── instructions/     (18) - Personas & standards
+├── chains/           (5)  - Multi-step workflows
 ├── contexts/         (9)  - Stack-specific guides
 └── examples/         (3)  - Gold-standard samples
 ```

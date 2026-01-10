@@ -9,11 +9,12 @@ Templates for Claude Code project configuration.
 | Template | Use Case | Complexity |
 |----------|----------|------------|
 | [minimal.md](claude-md/minimal.md) | Quick setup, any project | Low |
-| [comprehensive.md](claude-md/comprehensive.md) | Full-featured setup | High |
+| [full.md](claude-md/full.md) | Full-featured production setup | High |
 | [nextjs-app.md](claude-md/nextjs-app.md) | Next.js 14+ with App Router | Medium |
 | [python-api.md](claude-md/python-api.md) | FastAPI/Flask backend | Medium |
 | [nodejs-service.md](claude-md/nodejs-service.md) | Express.js backend | Medium |
 | [cli-tool.md](claude-md/cli-tool.md) | Command-line tools | Medium |
+| [auto-enhance.md](claude-md/auto-enhance.md) | AI Library auto-enhancement snippet | Low |
 
 ### Usage
 ```bash
