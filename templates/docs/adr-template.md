@@ -100,8 +100,8 @@ Example:
 
 ## Related Decisions
 
-* [ADR-XXX: Related decision](link)
-* [ADR-YYY: Related decision](link)
+* [ADR-XXX: Related decision](./ADR-XXX.md) <!-- Replace XXX with actual ADR number -->
+* [ADR-YYY: Related decision](./ADR-YYY.md) <!-- Replace YYY with actual ADR number -->
 
 ---
 

@@ -1,8 +1,8 @@
 # Next.js Coding Standards
 
-> Conventions for Next.js 14+ with App Router
+> Conventions for Next.js 15+ with App Router (January 2026)
 
-## File Structure
+## File Structure (Next.js 15)
 
 ```
 app/
@@ -13,7 +13,7 @@ app/
 ├── (dashboard)/
 │   ├── dashboard/
 │   │   ├── page.tsx
-│   │   ├── loading.tsx     # Loading UI
+│   │   ├── loading.tsx     # Streaming loading UI
 │   │   └── error.tsx       # Error boundary
 │   └── layout.tsx
 ├── api/
@@ -21,21 +21,22 @@ app/
 │       └── route.ts        # API route
 ├── layout.tsx              # Root layout
 ├── page.tsx                # Home page
+├── not-found.tsx           # 404 page
 └── globals.css
 ```
 
-## Server vs Client Components
+## Server vs Client Components (Default: Server)
 
-### Default: Server Components
+### Server Components (No directive needed)
 ```tsx
-// No directive needed - this is a Server Component
+// This is a Server Component by default
 export default async function UsersPage() {
   const users = await db.users.findMany();
   return <UserList users={users} />;
 }
 ```
 
-### Client Components (When Needed)
+### Client Components (Only when required)
 ```tsx
 'use client';
 
@@ -47,33 +48,40 @@ export function Counter() {
 }
 ```
 
-### When to Use Client
-- useState, useEffect, useRef, etc.
-- Event handlers (onClick, onChange)
-- Browser APIs (window, document)
-- Third-party client libraries
+### When to Use 'use client'
+- `useState`, `useEffect`, `useRef`, etc.
+- Event handlers (`onClick`, `onChange`)
+- Browser APIs (`window`, `document`)
+- Third-party client libraries (charts, maps)
 
-## Data Fetching
+## Data Fetching (Next.js 15)
 
-### In Server Components
+### In Server Components (Direct async/await)
 ```tsx
-// Direct async/await - no useEffect needed
 export default async function Page() {
-  const data = await fetch('https://api.example.com/data', {
-    cache: 'force-cache',     // Default: cache forever
-    // cache: 'no-store',     // Never cache
-    // next: { revalidate: 60 } // Revalidate every 60s
+  // Default: cached indefinitely
+  const data = await fetch('https://api.example.com/data');
+  
+  // Revalidate every 60 seconds
+  const freshData = await fetch('https://api.example.com/data', {
+    next: { revalidate: 60 }
+  });
+  
+  // Never cache (dynamic data)
+  const dynamicData = await fetch('https://api.example.com/data', {
+    cache: 'no-store'
   });
   
   return <Display data={data} />;
 }
 ```
 
-### Database Queries
+### Database Queries (Direct in Server Components)
 ```tsx
 import { db } from '@/lib/db';
 
 export default async function UsersPage() {
+  // Direct database access - no API layer needed
   const users = await db.users.findMany({
     take: 10,
     orderBy: { createdAt: 'desc' }
@@ -83,26 +91,55 @@ export default async function UsersPage() {
 }
 ```
 
-## Server Actions
+### Parallel Data Fetching
+```tsx
+export default async function Dashboard() {
+  // Parallel fetching - much faster
+  const [user, posts, analytics] = await Promise.all([
+    getUser(),
+    getPosts(),
+    getAnalytics()
+  ]);
+  
+  return (
+    <>
+      <UserCard user={user} />
+      <PostList posts={posts} />
+      <AnalyticsChart data={analytics} />
+    </>
+  );
+}
+```
 
+## Server Actions (Next.js 15)
+
+### Defining Server Actions
 ```tsx
 // lib/actions/users.ts
 'use server';
 
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
+import { z } from 'zod';
+
+const CreateUserSchema = z.object({
+  name: z.string().min(1),
+  email: z.string().email(),
+});
 
 export async function createUser(formData: FormData) {
-  const name = formData.get('name') as string;
-  const email = formData.get('email') as string;
+  // Validate with Zod
+  const result = CreateUserSchema.safeParse({
+    name: formData.get('name'),
+    email: formData.get('email'),
+  });
   
-  // Validate
-  if (!name || !email) {
-    return { error: 'Name and email required' };
+  if (!result.success) {
+    return { error: result.error.flatten().fieldErrors };
   }
   
-  // Create
-  await db.users.create({ data: { name, email } });
+  // Create user
+  await db.users.create({ data: result.data });
   
   // Revalidate and redirect
   revalidatePath('/users');
@@ -110,27 +147,69 @@ export async function createUser(formData: FormData) {
 }
 ```
 
-### Using Server Actions
+### Using Server Actions with Forms
 ```tsx
-// In a form
+// Simple form
 <form action={createUser}>
-  <input name="name" />
-  <input name="email" />
+  <input name="name" required />
+  <input name="email" type="email" required />
   <button type="submit">Create</button>
 </form>
+```
 
-// With useFormState for feedback
+### With useActionState (React 19)
+```tsx
 'use client';
-import { useFormState } from 'react-dom';
+import { useActionState } from 'react';
+import { createUser } from '@/lib/actions/users';
 
-function CreateUserForm() {
-  const [state, action] = useFormState(createUser, null);
+export function CreateUserForm() {
+  const [state, action, isPending] = useActionState(createUser, null);
   
   return (
     <form action={action}>
-      {state?.error && <p className="error">{state.error}</p>}
-      {/* ... */}
+      {state?.error && <p className="text-red-500">{state.error}</p>}
+      <input name="name" disabled={isPending} />
+      <input name="email" type="email" disabled={isPending} />
+      <button type="submit" disabled={isPending}>
+        {isPending ? 'Creating...' : 'Create'}
+      </button>
     </form>
+  );
+}
+```
+
+### Optimistic Updates (React 19)
+```tsx
+'use client';
+import { useOptimistic } from 'react';
+
+export function TodoList({ todos, addTodo }) {
+  const [optimisticTodos, addOptimisticTodo] = useOptimistic(
+    todos,
+    (state, newTodo) => [...state, { ...newTodo, pending: true }]
+  );
+  
+  async function handleSubmit(formData: FormData) {
+    const newTodo = { title: formData.get('title') as string };
+    addOptimisticTodo(newTodo);
+    await addTodo(newTodo);
+  }
+  
+  return (
+    <>
+      <form action={handleSubmit}>
+        <input name="title" />
+        <button>Add</button>
+      </form>
+      <ul>
+        {optimisticTodos.map(todo => (
+          <li key={todo.id} style={{ opacity: todo.pending ? 0.5 : 1 }}>
+            {todo.title}
+          </li>
+        ))}
+      </ul>
+    </>
   );
 }
 ```
@@ -140,16 +219,59 @@ function CreateUserForm() {
 ```typescript
 // app/api/users/route.ts
 import { NextResponse } from 'next/server';
+import { z } from 'zod';
 
-export async function GET() {
-  const users = await db.users.findMany();
+export async function GET(request: Request) {
+  const { searchParams } = new URL(request.url);
+  const limit = parseInt(searchParams.get('limit') || '10');
+  
+  const users = await db.users.findMany({ take: limit });
   return NextResponse.json(users);
 }
 
 export async function POST(request: Request) {
   const body = await request.json();
-  const user = await db.users.create({ data: body });
+  
+  // Validate
+  const result = UserSchema.safeParse(body);
+  if (!result.success) {
+    return NextResponse.json(
+      { error: result.error.flatten() },
+      { status: 400 }
+    );
+  }
+  
+  const user = await db.users.create({ data: result.data });
   return NextResponse.json(user, { status: 201 });
+}
+```
+
+## Streaming & Suspense
+
+### Loading UI (Automatic Suspense)
+```tsx
+// app/dashboard/loading.tsx
+export default function Loading() {
+  return <DashboardSkeleton />;
+}
+```
+
+### Manual Suspense Boundaries
+```tsx
+import { Suspense } from 'react';
+
+export default function Page() {
+  return (
+    <>
+      <Header />
+      <Suspense fallback={<PostsSkeleton />}>
+        <Posts />
+      </Suspense>
+      <Suspense fallback={<CommentsSkeleton />}>
+        <Comments />
+      </Suspense>
+    </>
+  );
 }
 ```
 
@@ -163,49 +285,66 @@ export default function Error({
   error,
   reset,
 }: {
-  error: Error;
+  error: Error & { digest?: string };
   reset: () => void;
 }) {
   return (
-    <div>
-      <h2>Something went wrong!</h2>
-      <button onClick={reset}>Try again</button>
+    <div className="p-4 bg-red-50 rounded">
+      <h2 className="text-red-800 font-bold">Something went wrong!</h2>
+      <p className="text-red-600">{error.message}</p>
+      <button 
+        onClick={reset}
+        className="mt-2 px-4 py-2 bg-red-600 text-white rounded"
+      >
+        Try again
+      </button>
     </div>
   );
 }
 ```
 
-## Loading States
-
-```tsx
-// app/dashboard/loading.tsx
-export default function Loading() {
-  return <DashboardSkeleton />;
-}
-```
-
-## Metadata
+## Metadata (SEO)
 
 ```tsx
 // Static metadata
 export const metadata = {
   title: 'Page Title',
   description: 'Page description',
+  openGraph: {
+    title: 'OG Title',
+    description: 'OG Description',
+    images: ['/og-image.png'],
+  },
 };
 
 // Dynamic metadata
 export async function generateMetadata({ params }) {
   const product = await getProduct(params.id);
-  return { title: product.name };
+  return {
+    title: product.name,
+    description: product.description,
+  };
 }
 ```
 
-## Patterns to Avoid
+## Patterns to Avoid (Anti-patterns)
 
-| Avoid | Instead |
-|-------|---------|
+| ❌ Avoid | ✅ Instead |
+|----------|-----------|
 | `useEffect` for data fetching | Fetch in Server Components |
-| Client Component by default | Server Component by default |
-| Prop drilling deeply | Server Components with direct data |
+| `'use client'` by default | Server Components by default |
+| Deep prop drilling | Server Components with direct data |
 | `getServerSideProps` | Server Components or Route Handlers |
-| API routes for internal data | Server Actions or direct DB |
+| API routes for internal data | Server Actions or direct DB access |
+| `useState` for server data | Server Components + Suspense |
+| Manual loading states | `loading.tsx` + Suspense |
+
+## Performance Checklist
+
+- [ ] Use Server Components by default
+- [ ] Parallel data fetching with `Promise.all`
+- [ ] Streaming with Suspense for slow data
+- [ ] Image optimization with `next/image`
+- [ ] Font optimization with `next/font`
+- [ ] Route prefetching enabled (default)
+- [ ] Static generation where possible

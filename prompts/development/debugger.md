@@ -1,76 +1,64 @@
-# Debugger
+# Deep Debugger
 
-> Break out of debugging loops with systematic analysis
+> A systematic, scientific approach to solving complex bugs. Stops "shotgun debugging" (random guesses) and forces root cause analysis.
 
 ## Variables
-- `[describe it]` - Description of the bug and what you've observed
+- `[bug context]` - Description of the bug, reproduction steps, and what you've already tried.
 
 ## Prompt
 
 ```
-I'm stuck in a debugging loop. The bug: [describe it]
+Act as a Principal Software Engineer. I am stuck on a complex bug and need a rigorous, scientific approach to solve it.
 
-You already tried many things that didn't work; analyze what didn't help first. Before suggesting fixes:
+Bug Context:
+[bug context]
 
-1. List 5-7 different new possible causes. Consider:
-   - Data issue, not code?
-   - Environment/config?
-   - Race condition/timing?
-   - Caching?
-   - Bug is somewhere else entirely?
+<thinking_process>
+1.  Analyze the symptoms to understand the "What" and "Where".
+2.  Discard "gut feelings" and focus only on proven facts.
+3.  Formulate mutually exclusive hypotheses.
+4.  Design experiments to prove/disprove each hypothesis (binary search method).
+5.  Plan the fix only after the root cause is isolated.
+</thinking_process>
 
-2. Rank by likelihood
+Please guide me through this debugging session using the following structure:
 
-3. For top 2: add diagnostic logs to prove/disprove each. Don't fix yet.
+# Debugging Session
 
-4. Only after we confirm the cause do we fix.
+## 1. Fact-Finding
+- **Observations**: List strictly observed behaviors (no assumptions).
+- **Constraints**: What do we know is *working*? (Narrowing the search space).
+- **The Gap**: Explicit difference between Expected vs Actual.
+
+## 2. Hypothesis Generation
+| ID | Hypothesis (Potential Cause) | Probability | Test Method (How to prove/disprove) |
+|----|------------------------------|-------------|-------------------------------------|
+| H1 | [e.g. Race condition in X]   | High        | [e.g. Add delay to Y]               |
+| H2 | [e.g. Bad data from API]     | Medium      | [e.g. Log API response body]        |
+| H3 | [e.g. Caching issue]         | Low         | [e.g. Disable cache/incognito]      |
+
+## 3. Investigation Plan (The "Trap")
+*Don't fix yet. We need to trap the bug.*
+- **Log Points**: Where specifically to add logs? What variables to inspect?
+- **Experiments**: What simple change will isolate H1 vs H2?
+- **Binary Search**: How can we cut the system in half to find the error boundary?
+
+## 4. Root Cause Analysis (Simulation)
+*Assuming we found the cause, explain WHY it happened.*
+- **The Trigger**: What exact sequence of events causes the failure?
+- **The Flaw**: What logic/assumption was incorrect?
+
+## 5. Proposed Fix
+- **Immediate Fix**: The patch.
+- **Systemic Fix**: How to prevent this entire class of bugs forever (e.g., "Use strict types", "Add invariant check").
 ```
 
 ## Usage Tips
-
-- Use when you've been **stuck for 15+ minutes**
-- Include what you've already tried in the description
-- The "don't fix yet" instruction prevents premature solutions
-- Diagnostic logs > guessing at fixes
-- Often the bug is NOT where you think it is
+- **Stop coding.** Read the output first.
+- If you can't reproduce it, you can't fix it. Ask for a "Reproduction Script" first if needed.
+- Use `console.log` / `print` liberally to validate assumptions.
+- "It works on my machine" is a clue (Config? Env vars? Race condition?).
 
 ## Pairs Well With
-
-- `snippets/modifiers/ultrathink.md` - For complex bugs
-- `snippets/modifiers/step-by-step.md` - Methodical approach
-- [tech-debt-audit.md](../development/tech-debt-audit.md) - If bug reveals deeper issues
-
-## Bug Description Template
-
-```
-The bug: [what's happening]
-
-Expected: [what should happen]
-
-Actual: [what actually happens]
-
-Reproduction steps:
-1. ...
-2. ...
-3. ...
-
-Already tried:
-- [thing 1] - didn't work because [why]
-- [thing 2] - didn't work because [why]
-
-Environment:
-- [dev/staging/prod]
-- [browser/OS if relevant]
-- [recent changes if any]
-```
-
-## Common Bug Categories
-
-| Category | Symptoms | Check |
-|----------|----------|-------|
-| **Data** | Works sometimes | Inspect actual data values |
-| **Timing** | Intermittent | Add timestamps to logs |
-| **Cache** | Old data showing | Clear all caches, hard refresh |
-| **Config** | Works locally | Compare env vars |
-| **State** | UI out of sync | Log state changes |
-| **Network** | Timeouts, failures | Check network tab |
+- `snippets/modifiers/step-by-step.md` - For executing the investigation plan.
+- `skills/debugging.md` - If you need the AI to *do* the debugging.

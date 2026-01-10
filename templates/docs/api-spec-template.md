@@ -264,9 +264,9 @@ Verify by computing HMAC-SHA256 of the payload with your webhook secret.
 
 ## SDKs
 
-- [JavaScript SDK](link)
-- [Python SDK](link)
-- [Go SDK](link)
+- [JavaScript SDK](https://github.com/YOUR_ORG/YOUR_PROJECT-js) <!-- Update with actual SDK URL -->
+- [Python SDK](https://github.com/YOUR_ORG/YOUR_PROJECT-python) <!-- Update with actual SDK URL -->
+- [Go SDK](https://github.com/YOUR_ORG/YOUR_PROJECT-go) <!-- Update with actual SDK URL -->
 
 ---
 

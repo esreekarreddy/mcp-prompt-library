@@ -2,11 +2,47 @@
 
 > Your personal goldmine of prompts, skills, and instructions for AI-assisted development.
 
-A centralized reference library designed to be used across all your projects. Copy, reference, or symlink from here.
+A centralized reference library with 80+ prompts, skills, templates, and workflows. Includes an **MCP Server** for automatic prompt enhancement in Claude, OpenCode, and Cursor.
 
 ---
 
 ## Quick Start
+
+### Option 1: MCP Server (Recommended)
+
+The MCP server gives Claude **automatic access** to all prompts and can auto-enhance your requests.
+
+```bash
+# 1. Install and build
+cd mcp-server
+npm install
+npm run build
+
+# 2. Add to Claude Desktop (~/Library/Application Support/Claude/claude_desktop_config.json)
+{
+  "mcpServers": {
+    "ai-library": {
+      "command": "node",
+      "args": ["/path/to/ai-library/mcp-server/dist/index.js"]
+    }
+  }
+}
+
+# 3. Restart Claude Desktop
+```
+
+**Enable Auto-Enhancement:** Add this to your project's `CLAUDE.md`:
+
+```markdown
+## AI Library Integration
+
+For any substantial task, ALWAYS call `enhance_prompt` first.
+Use `get_prompt("ultrathink")` for complex problems.
+```
+
+See `templates/claude-md/auto-enhance.md` for the full integration guide.
+
+### Option 2: Manual Copy-Paste
 
 ```bash
 # Reference this folder from any project
@@ -17,6 +53,24 @@ cat $AI_LIBRARY/prompts/planning/prd-generator.md | pbcopy
 
 # Symlink CLAUDE.md to a project
 ln -s $AI_LIBRARY/templates/claude-md/nextjs-app.md ./CLAUDE.md
+```
+
+### Option 3: CLI Tool
+
+```bash
+cd mcp-server
+
+# List all prompts
+node dist/cli.js list
+
+# Search for prompts
+node dist/cli.js search "debugging"
+
+# Get a specific prompt
+node dist/cli.js get ultrathink
+
+# Library stats
+node dist/cli.js stats
 ```
 
 ---
@@ -155,22 +209,62 @@ The actual prompt...
 
 ---
 
+## MCP Server Tools
+
+When using the MCP server, Claude has access to these tools:
+
+| Tool | Purpose |
+|------|---------|
+| `enhance_prompt` | **Auto-enhance any request** - Call this first for better results |
+| `get_prompt` | Fetch any prompt, skill, or template by name |
+| `search_prompts` | Search the library by keywords |
+| `suggest_prompts` | Get AI-recommended prompts for your task |
+| `run_chain` | Execute multi-step workflows |
+| `compose_prompt` | Combine multiple prompts |
+| `library_stats` | See what's in the library |
+| `save_to_library` | Save new prompts to the library |
+
+### Auto-Enhancement Flow
+
+```
+You: "Build a user authentication system"
+        ↓
+Claude calls: enhance_prompt("Build a user authentication system")
+        ↓
+Returns: security-review, new-feature chain, auth patterns
+        ↓
+Claude calls: get_prompt("security-review")
+        ↓
+Claude applies security patterns while building
+```
+
+---
+
 ## Quick Reference
 
 ### Most Used Prompts
 | Prompt | Path | Use Case |
 |--------|------|----------|
 | PRD Generator | `prompts/planning/prd-generator.md` | Starting a new feature |
-| Debugger | `prompts/development/debugger.md` | Stuck on a bug |
+| Deep Debugger | `prompts/analysis/deep-debugger.md` | Systematic debugging |
 | Security Audit | `prompts/quality/security-audit.md` | Pre-production check |
-| Ultrathink | `snippets/modifiers/ultrathink.md` | Need deeper analysis |
+| Ultrathink | `snippets/modifiers/ultrathink.md` | Deep analysis mode |
+| Megathink | `snippets/modifiers/megathink.md` | Maximum thinking for architecture |
 
 ### Essential Templates
 | Template | Path | Use Case |
 |----------|------|----------|
+| Full CLAUDE.md | `templates/claude-md/full.md` | Comprehensive project setup |
+| Auto-Enhance | `templates/claude-md/auto-enhance.md` | Enable auto-enhancement |
 | Next.js CLAUDE.md | `templates/claude-md/nextjs-app.md` | New Next.js project |
 | Minimal CLAUDE.md | `templates/claude-md/minimal.md` | Quick project setup |
-| Next.js Cursor | `templates/cursor-rules/nextjs.txt` | Cursor IDE config |
+
+### Skills
+| Skill | Path | Use Case |
+|-------|------|----------|
+| Code Review Advanced | `skills/code-review-advanced.md` | 4-lens comprehensive review |
+| Senior Engineer Persona | `instructions/personas/senior-engineer.md` | Expert-level guidance |
+| TypeScript React Standards | `instructions/standards/typescript-react.md` | Full stack TS/React standards |
 
 ---
 

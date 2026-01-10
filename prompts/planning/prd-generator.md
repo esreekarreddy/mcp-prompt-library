@@ -1,79 +1,66 @@
 # PRD Generator
 
-> Generate a comprehensive Product Requirements Document before writing any code
+> Generate a comprehensive, engineering-ready Product Requirements Document (PRD).
 
 ## Variables
 - `[your idea]` - Brief description of what you want to build
+- `[context]` - (Optional) Existing tech stack, user base, or constraints
 
 ## Prompt
 
 ```
-I want to build [your idea].
+Act as a Senior Product Manager and CTO. I want to build [your idea].
 
-Before writing any code, create a PRD with:
+Your goal is to create a detailed, engineering-ready PRD that I can hand to a developer to start coding immediately.
 
-1. Problem Statement: What problem does this solve? Who has it?
+<thinking_process>
+1.  Analyze the request to understand the core value proposition.
+2.  Identify the target user and their specific pain points.
+3.  Brainstorm core features required for a "lovable" MVP (Minimum Viable Product).
+4.  Identify technical constraints and requirements based on modern best practices.
+5.  Structure the output into a clear, actionable document.
+</thinking_process>
 
-2. User Stories: 5-7 stories in "As a [user], I want [action] so that [benefit]" format
+Please generate a PRD with the following structure. Be concise, ruthless with scope, and technical.
 
-3. Core Features (MVP only): What's essential for v1? Be ruthless.
+# Product Requirements Document: [Project Name]
 
-4. Out of Scope: What waits for v2?
+## 1. Executive Summary
+- **Pitch**: One sentence description.
+- **Problem**: What specific pain point are we solving?
+- **Solution**: High-level approach.
+- **Target Audience**: Who is this for?
 
-5. Tech Requirements: Stack, integrations, data models, auth needs
+## 2. User Stories (MVP Scope)
+Format: `- [ ] As a [user], I want [action] so that [benefit]`
+*Limit to the critical path only. Mark "P0" for must-haves.*
 
-6. Success Metrics: How do we know it works?
+## 3. Technical Specifications
+- **Stack Recommendations**: Frontend, Backend, Database, Infra (justify choices).
+- **Data Model**: Key entities and relationships (ERD description).
+- **API Endpoints**: Key routes required (e.g., `POST /api/generate`).
+- **Security**: Auth, RLS, validation rules.
 
-7. Open Questions: What needs deciding before we build?
+## 4. Design & UX Guidelines
+- **Core Flow**: Step-by-step user journey.
+- **Key UI Components**: Necessary screens/modals.
 
-Be specific, not generic.
+## 5. Implementation Roadmap
+- **Phase 1**: Setup & Boilerplate
+- **Phase 2**: Core MVP Features
+- **Phase 3**: Polish & Ship
+
+## 6. Open Questions & Risks
+- What unknowns need research?
+- What are the technical risks?
 ```
 
 ## Usage Tips
-
-- Use at the **very start** of any new feature or product
-- Force yourself to fill in all sections before coding
-- Share the PRD with stakeholders for alignment
-- Revisit when scope starts creeping
+- Use this *before* writing a single line of code.
+- If the output feels too big, ask Claude to "simplify to a weekend hackathon scope".
+- Review the "Data Model" section carefully—it often dictates your code structure.
 
 ## Pairs Well With
-
-- [scope-killer.md](scope-killer.md) - After PRD, ruthlessly cut scope
-- [implementation-plan.md](implementation-plan.md) - Turn PRD into actionable plan
-- `snippets/modifiers/be-ruthless.md` - For stricter MVP focus
-
-## Example Output Structure
-
-```markdown
-# PRD: [Feature Name]
-
-## 1. Problem Statement
-[Who has this problem and why it matters]
-
-## 2. User Stories
-- As a [user], I want [action] so that [benefit]
-- ...
-
-## 3. Core Features (MVP)
-- Feature 1
-- Feature 2
-- Feature 3
-
-## 4. Out of Scope (v2+)
-- Nice-to-have 1
-- Nice-to-have 2
-
-## 5. Tech Requirements
-- Stack: ...
-- Integrations: ...
-- Data Models: ...
-- Auth: ...
-
-## 6. Success Metrics
-- Metric 1: [how to measure]
-- Metric 2: [how to measure]
-
-## 7. Open Questions
-- [ ] Question 1
-- [ ] Question 2
-```
+- `prompts/planning/architecture-analyzer.md` (to validate the tech spec)
+- `prompts/planning/implementation-plan.md` (to break Phase 1-3 into tasks)
+- `snippets/modifiers/be-ruthless.md` (to cut scope further)

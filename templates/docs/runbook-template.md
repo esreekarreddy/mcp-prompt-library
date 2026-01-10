@@ -233,6 +233,6 @@ kubectl port-forward service/[name] 8080:80
 
 ### Related Documentation
 
-- [Architecture Doc](link)
-- [API Documentation](link)
-- [Incident History](link)
+- [Architecture Doc](../architecture/SERVICE_NAME.md) <!-- Update with actual path -->
+- [API Documentation](../api/SERVICE_NAME.md) <!-- Update with actual path -->
+- [Incident History](../incidents/SERVICE_NAME.md) <!-- Update with actual path -->

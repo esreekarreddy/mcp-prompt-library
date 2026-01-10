@@ -195,6 +195,6 @@ npm run test:coverage # With coverage
 
 ## Resources
 
-- [Framework Docs](link)
-- [Internal Wiki](link)
-- [API Reference](link)
+- [Framework Docs](https://nextjs.org/docs) <!-- Update with your framework -->
+- [Internal Wiki](https://YOUR_COMPANY.notion.site/wiki) <!-- Update with your wiki -->
+- [API Reference](./docs/api.md) <!-- Update with actual path -->
