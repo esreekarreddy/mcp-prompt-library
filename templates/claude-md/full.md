@@ -13,9 +13,9 @@ version: 2.0.0
 ---
 
 ```markdown
-# Project: {{project_name}}
+# Project: [project_name]
 
-> {{one_line_description}}
+> [one_line_description]
 
 ## Quick Reference
 

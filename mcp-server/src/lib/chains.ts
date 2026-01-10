@@ -4,31 +4,81 @@
 
 import type { Chain, ChainSession, ChainStep } from '../types.js';
 import { randomBytes } from 'crypto';
+import { existsSync, readFileSync, writeFileSync, mkdirSync } from 'fs';
+import { join, dirname } from 'path';
 
-/**
- * Generate a unique session ID
- */
 function generateSessionId(): string {
   return randomBytes(8).toString('hex');
 }
 
-/**
- * Chain Manager handles active workflow sessions
- */
+interface PersistedSession {
+  id: string;
+  chainId: string;
+  chainName: string;
+  currentStep: number;
+  totalSteps: number;
+  startedAt: string;
+  context: Record<string, string>;
+  completedSteps: number[];
+}
+
 export class ChainManager {
   private sessions: Map<string, ChainSession> = new Map();
   private debug: boolean;
+  private persistPath: string | null = null;
 
   constructor(debug = false) {
     this.debug = debug;
   }
 
-  /**
-   * Log debug messages
-   */
   private log(...args: unknown[]): void {
     if (this.debug) {
       console.error('[ChainManager]', ...args);
+    }
+  }
+
+  enablePersistence(libraryPath: string): void {
+    this.persistPath = join(libraryPath, '.sessions', 'chains.json');
+    const dir = dirname(this.persistPath);
+    if (!existsSync(dir)) {
+      mkdirSync(dir, { recursive: true });
+    }
+    this.loadSessions();
+    this.log('Persistence enabled at:', this.persistPath);
+  }
+
+  private loadSessions(): void {
+    if (!this.persistPath || !existsSync(this.persistPath)) return;
+
+    try {
+      const content = readFileSync(this.persistPath, 'utf-8');
+      const persisted: PersistedSession[] = JSON.parse(content);
+      
+      for (const p of persisted) {
+        const session: ChainSession = {
+          ...p,
+          startedAt: new Date(p.startedAt),
+        };
+        this.sessions.set(session.id, session);
+      }
+      this.log(`Loaded ${persisted.length} persisted sessions`);
+    } catch (error) {
+      this.log('Failed to load persisted sessions:', error);
+    }
+  }
+
+  private saveSessions(): void {
+    if (!this.persistPath) return;
+
+    try {
+      const persisted: PersistedSession[] = Array.from(this.sessions.values()).map((s) => ({
+        ...s,
+        startedAt: s.startedAt.toISOString(),
+      }));
+      writeFileSync(this.persistPath, JSON.stringify(persisted, null, 2), 'utf-8');
+      this.log(`Saved ${persisted.length} sessions`);
+    } catch (error) {
+      this.log('Failed to save sessions:', error);
     }
   }
 
@@ -48,6 +98,7 @@ export class ChainManager {
     };
 
     this.sessions.set(session.id, session);
+    this.saveSessions();
     this.log('Started chain session:', session.id, 'for chain:', chain.name);
 
     return session;
@@ -74,17 +125,16 @@ export class ChainManager {
     const session = this.sessions.get(sessionId);
     if (!session) return null;
 
-    // Mark current step as completed
     if (!session.completedSteps.includes(session.currentStep)) {
       session.completedSteps.push(session.currentStep);
     }
 
-    // Advance to next step
     if (session.currentStep < session.totalSteps) {
       session.currentStep++;
       this.log('Advanced session', sessionId, 'to step', session.currentStep);
     }
 
+    this.saveSessions();
     return session;
   }
 
@@ -97,6 +147,7 @@ export class ChainManager {
 
     if (stepNumber >= 1 && stepNumber <= session.totalSteps) {
       session.currentStep = stepNumber;
+      this.saveSessions();
       this.log('Moved session', sessionId, 'to step', stepNumber);
     }
 
@@ -114,6 +165,7 @@ export class ChainManager {
     if (!session) return null;
 
     session.context = { ...session.context, ...updates };
+    this.saveSessions();
     return session;
   }
 
@@ -124,6 +176,7 @@ export class ChainManager {
     const existed = this.sessions.has(sessionId);
     this.sessions.delete(sessionId);
     if (existed) {
+      this.saveSessions();
       this.log('Ended session:', sessionId);
     }
     return existed;

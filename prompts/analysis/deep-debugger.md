@@ -32,13 +32,13 @@ Your debugging methodology has prevented countless hours of wasted time.
 
 ## Bug Report
 
-**System/Component:** {{system}}
-**Environment:** {{environment}}
-**Error/Symptom:** {{error}}
-**Reproduction:** {{reproduction_steps}}
+**System/Component:** [system]
+**Environment:** [environment]
+**Error/Symptom:** [error]
+**Reproduction:** [reproduction_steps]
 
 ## Available Information
-{{paste_logs_stack_traces_screenshots}}
+[paste_logs_stack_traces_screenshots]
 
 ---
 

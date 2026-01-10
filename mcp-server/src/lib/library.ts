@@ -3,8 +3,10 @@
  */
 
 import { readFileSync, statSync, existsSync, writeFileSync, mkdirSync } from 'fs';
+import { readFile, stat } from 'fs/promises';
 import { join, relative, dirname, basename, extname } from 'path';
 import { glob } from 'glob';
+import chokidar, { type FSWatcher } from 'chokidar';
 import type {
   LibraryItem,
   LibraryCategory,
@@ -26,6 +28,7 @@ import {
   fuzzyMatch,
   normalizeName,
 } from './parser.js';
+import { validateIntentPatterns } from './schemas.js';
 
 // Valid categories
 const CATEGORIES: LibraryCategory[] = [
@@ -176,6 +179,8 @@ export class Library {
   private index: LibraryIndex | null = null;
   private debug: boolean;
   private intentPatterns: IntentPattern[] = DEFAULT_INTENT_PATTERNS;
+  private watcher: FSWatcher | null = null;
+  private watchEnabled: boolean = false;
 
   constructor(libraryPath: string, debug = false) {
     this.libraryPath = libraryPath;
@@ -208,7 +213,8 @@ export class Library {
     if (existsSync(configPath)) {
       try {
         const content = readFileSync(configPath, 'utf-8');
-        const customIntents = JSON.parse(content) as IntentPattern[];
+        const parsed = JSON.parse(content);
+        const customIntents = validateIntentPatterns(parsed);
         this.intentPatterns = [...customIntents, ...DEFAULT_INTENT_PATTERNS];
         this.log(`Loaded ${customIntents.length} custom intent patterns`);
       } catch (error) {
@@ -227,12 +233,10 @@ export class Library {
     const chains = new Map<string, Chain>();
     const searchIndex: SearchEntry[] = [];
 
-    // Initialize category maps
     for (const cat of CATEGORIES) {
       byCategory.set(cat, []);
     }
 
-    // Find all markdown files
     const pattern = '**/*.md';
     const files = await glob(pattern, {
       cwd: this.libraryPath,
@@ -241,36 +245,38 @@ export class Library {
 
     this.log(`Found ${files.length} markdown files`);
 
-    for (const file of files) {
-      // Skip index files
-      if (file.endsWith('_index.md') || file === 'README.md') {
-        continue;
-      }
+    const filesToParse = files.filter(
+      (file) => !file.endsWith('_index.md') && file !== 'README.md'
+    );
 
-      const item = this.parseFile(file);
-      if (item) {
+    const BATCH_SIZE = 50;
+    for (let i = 0; i < filesToParse.length; i += BATCH_SIZE) {
+      const batch = filesToParse.slice(i, i + BATCH_SIZE);
+      const parsedItems = await Promise.all(
+        batch.map((file) => this.parseFileAsync(file))
+      );
+
+      for (const item of parsedItems) {
+        if (!item) continue;
+
         items.set(item.id, item);
 
-        // Add to category index
         const categoryItems = byCategory.get(item.category) || [];
         categoryItems.push(item);
         byCategory.set(item.category, categoryItems);
 
-        // Add to tag index
         for (const tag of item.metadata.tags || []) {
           const tagItems = byTag.get(tag) || [];
           tagItems.push(item);
           byTag.set(tag, tagItems);
         }
 
-        // Add to search index
         searchIndex.push({
           id: item.id,
           text: item.searchableText,
           weight: this.calculateWeight(item),
         });
 
-        // Parse chains
         if (item.category === 'chains') {
           try {
             const chain = parseChain(item);
@@ -293,62 +299,78 @@ export class Library {
     this.log(`Indexed ${items.size} items, ${chains.size} chains`);
   }
 
-  /**
-   * Parse a single file into a LibraryItem
-   */
   private parseFile(relativePath: string): LibraryItem | null {
     try {
       const fullPath = join(this.libraryPath, relativePath);
       const content = readFileSync(fullPath, 'utf-8');
       const stats = statSync(fullPath);
 
-      // Extract category and subcategory from path
-      const parts = relativePath.split('/');
-      const category = parts[0] as LibraryCategory;
-
-      if (!CATEGORIES.includes(category)) {
-        return null;
-      }
-
-      const subcategory = parts.length > 2 ? parts[1] : undefined;
-      const name = basename(relativePath, '.md');
-
-      // Parse markdown
-      const { metadata, body } = parseMarkdown(content);
-
-      // Extract or use title
-      const title = metadata.title || extractTitle(body) || name;
-      const description = metadata.description || extractDescription(body);
-
-      // Build ID
-      const id = relativePath.replace(/\.md$/, '');
-
-      const item: LibraryItem = {
-        id,
-        name,
-        category,
-        subcategory,
-        path: fullPath,
-        relativePath,
-        content,
-        body,
-        metadata: {
-          ...metadata,
-          title,
-          description,
-        },
-        searchableText: '',
-        modifiedAt: stats.mtime,
-      };
-
-      // Create searchable text
-      item.searchableText = createSearchableText(item);
-
-      return item;
+      return this.parseFileContent(relativePath, fullPath, content, stats.mtime);
     } catch (error) {
       this.log('Failed to parse file:', relativePath, error);
       return null;
     }
+  }
+
+  private async parseFileAsync(relativePath: string): Promise<LibraryItem | null> {
+    try {
+      const fullPath = join(this.libraryPath, relativePath);
+      const [content, stats] = await Promise.all([
+        readFile(fullPath, 'utf-8'),
+        stat(fullPath),
+      ]);
+
+      return this.parseFileContent(relativePath, fullPath, content, stats.mtime);
+    } catch (error) {
+      this.log('Failed to parse file:', relativePath, error);
+      return null;
+    }
+  }
+
+  private parseFileContent(
+    relativePath: string,
+    fullPath: string,
+    content: string,
+    mtime: Date
+  ): LibraryItem | null {
+    const parts = relativePath.split('/');
+    const category = parts[0] as LibraryCategory;
+
+    if (!CATEGORIES.includes(category)) {
+      return null;
+    }
+
+    const subcategory = parts.length > 2 ? parts[1] : undefined;
+    const name = basename(relativePath, '.md');
+
+    const { metadata, body } = parseMarkdown(content);
+
+    const title = metadata.title || extractTitle(body) || name;
+    const description = metadata.description || extractDescription(body);
+
+    const id = relativePath.replace(/\.md$/, '');
+
+    const item: LibraryItem = {
+      id,
+      name,
+      category,
+      subcategory,
+      path: fullPath,
+      relativePath,
+      content,
+      body,
+      metadata: {
+        ...metadata,
+        title,
+        description,
+      },
+      searchableText: '',
+      modifiedAt: mtime,
+    };
+
+    item.searchableText = createSearchableText(item);
+
+    return item;
   }
 
   /**
@@ -629,5 +651,107 @@ export class Library {
       total: this.index.items.size,
       byCategory,
     };
+  }
+
+  enableWatch(): void {
+    if (this.watcher || this.watchEnabled) return;
+
+    this.watchEnabled = true;
+    const watchPaths = CATEGORIES.map((cat) => join(this.libraryPath, cat));
+
+    this.watcher = chokidar.watch(watchPaths, {
+      ignored: /(^|[\/\\])\../,
+      persistent: true,
+      ignoreInitial: true,
+      awaitWriteFinish: {
+        stabilityThreshold: 300,
+        pollInterval: 100,
+      },
+    });
+
+    const handleChange = async (filePath: string) => {
+      if (!filePath.endsWith('.md')) return;
+
+      const relativePath = relative(this.libraryPath, filePath);
+      this.log('File changed:', relativePath);
+
+      const item = this.parseFile(relativePath);
+      if (item && this.index) {
+        this.index.items.set(item.id, item);
+
+        const categoryItems = this.index.byCategory.get(item.category) || [];
+        const existingIndex = categoryItems.findIndex((i) => i.id === item.id);
+        if (existingIndex >= 0) {
+          categoryItems[existingIndex] = item;
+        } else {
+          categoryItems.push(item);
+        }
+        this.index.byCategory.set(item.category, categoryItems);
+
+        const searchIdx = this.index.searchIndex.findIndex((e) => e.id === item.id);
+        const newEntry = {
+          id: item.id,
+          text: item.searchableText,
+          weight: this.calculateWeight(item),
+        };
+        if (searchIdx >= 0) {
+          this.index.searchIndex[searchIdx] = newEntry;
+        } else {
+          this.index.searchIndex.push(newEntry);
+        }
+
+        if (item.category === 'chains') {
+          try {
+            const chain = parseChain(item);
+            this.index.chains.set(item.id, chain);
+          } catch (error) {
+            this.log('Failed to parse chain:', item.id, error);
+          }
+        }
+      }
+    };
+
+    const handleDelete = (filePath: string) => {
+      if (!filePath.endsWith('.md') || !this.index) return;
+
+      const relativePath = relative(this.libraryPath, filePath);
+      const id = relativePath.replace(/\.md$/, '');
+      this.log('File deleted:', id);
+
+      const item = this.index.items.get(id);
+      if (item) {
+        this.index.items.delete(id);
+
+        const categoryItems = this.index.byCategory.get(item.category) || [];
+        const filtered = categoryItems.filter((i) => i.id !== id);
+        this.index.byCategory.set(item.category, filtered);
+
+        this.index.searchIndex = this.index.searchIndex.filter((e) => e.id !== id);
+
+        if (item.category === 'chains') {
+          this.index.chains.delete(id);
+        }
+      }
+    };
+
+    this.watcher
+      .on('add', handleChange)
+      .on('change', handleChange)
+      .on('unlink', handleDelete);
+
+    this.log('File watching enabled for:', watchPaths.join(', '));
+  }
+
+  disableWatch(): void {
+    if (this.watcher) {
+      this.watcher.close();
+      this.watcher = null;
+      this.watchEnabled = false;
+      this.log('File watching disabled');
+    }
+  }
+
+  isWatching(): boolean {
+    return this.watchEnabled;
   }
 }
