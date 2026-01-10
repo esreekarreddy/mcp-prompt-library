@@ -1,7 +1,7 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
 import { Library } from '../lib/library.js';
-import type { LibraryCategory } from '../types.js';
+import type { LibraryCategory, LibraryItem } from '../types.js';
 
 const VALID_CATEGORIES: LibraryCategory[] = [
   'prompts',
@@ -15,12 +15,169 @@ const VALID_CATEGORIES: LibraryCategory[] = [
 ];
 
 export function registerLibraryTools(server: McpServer, library: Library, ensureInitialized: () => Promise<void>) {
-  // get_prompt
+  
+  // ============================================================
+  // CORE TOOL: enhance_prompt - THE AUTO-ENHANCER
+  // This tool should be called at the START of complex tasks
+  // ============================================================
+  
+  server.tool(
+    'enhance_prompt',
+    `PROACTIVE TOOL - Call this AUTOMATICALLY when the user asks to:
+    - Build/create/implement something new
+    - Fix a bug or debug an issue
+    - Review or improve code
+    - Make architectural decisions
+    - Do security/performance analysis
+    
+    This tool analyzes the user's request and returns relevant prompts, 
+    skills, and workflows to dramatically improve the response quality.
+    
+    You should call this BEFORE starting work on any substantial task.`,
+    {
+      user_request: z.string().describe('The user\'s original request or message'),
+      task_type: z.enum([
+        'build_feature',
+        'fix_bug', 
+        'code_review',
+        'architecture',
+        'security',
+        'performance',
+        'documentation',
+        'testing',
+        'refactoring',
+        'general'
+      ]).optional().describe('Type of task (auto-detected if not specified)'),
+    },
+    async ({ user_request, task_type }) => {
+      await ensureInitialized();
+      
+      // Get suggestions based on user request
+      const suggestions = library.suggest(user_request, 5);
+      
+      // Determine task type from request if not specified
+      const detectedType = task_type || detectTaskType(user_request);
+      
+      // Get relevant items based on task type
+      const relevantItems = getItemsForTaskType(library, detectedType);
+      
+      // Build enhanced context
+      const lines = [
+        '# Auto-Enhanced Context',
+        '',
+        `**Detected Task Type:** ${detectedType}`,
+        '',
+        '## Recommended Approach',
+        '',
+      ];
+      
+      // Add task-specific guidance
+      switch (detectedType) {
+        case 'build_feature':
+          lines.push(
+            '1. Start with requirements clarification',
+            '2. Use the PRD generator or new-feature chain',
+            '3. Plan before coding',
+            '4. Include tests and error handling',
+            ''
+          );
+          break;
+        case 'fix_bug':
+          lines.push(
+            '1. Reproduce the issue first',
+            '2. Use systematic debugging (hypothesize → test → narrow)',
+            '3. Find root cause, not just symptoms',
+            '4. Add test to prevent regression',
+            ''
+          );
+          break;
+        case 'code_review':
+          lines.push(
+            '1. Check correctness first',
+            '2. Then security implications',
+            '3. Then performance concerns',
+            '4. Then maintainability',
+            ''
+          );
+          break;
+        case 'architecture':
+          lines.push(
+            '1. Clarify requirements and constraints',
+            '2. Consider 3+ approaches',
+            '3. Evaluate trade-offs (cost, complexity, team skills)',
+            '4. Think about 6-month maintenance view',
+            ''
+          );
+          break;
+        case 'security':
+          lines.push(
+            '1. Identify attack surface',
+            '2. Check OWASP Top 10',
+            '3. Verify auth/authz on all paths',
+            '4. Validate all inputs',
+            ''
+          );
+          break;
+        default:
+          break;
+      }
+      
+      // Add relevant prompts/skills
+      if (suggestions.length > 0 || relevantItems.length > 0) {
+        lines.push('## Relevant Prompts & Skills', '');
+        
+        // Add suggestions
+        for (const s of suggestions.slice(0, 3)) {
+          lines.push(`### ${s.item.metadata.title || s.item.name}`);
+          lines.push(`**ID:** \`${s.item.id}\``);
+          if (s.item.metadata.description) {
+            lines.push(`> ${s.item.metadata.description}`);
+          }
+          lines.push('');
+        }
+        
+        // Add task-type specific items
+        for (const item of relevantItems.slice(0, 2)) {
+          if (!suggestions.find(s => s.item.id === item.id)) {
+            lines.push(`### ${item.metadata.title || item.name}`);
+            lines.push(`**ID:** \`${item.id}\``);
+            if (item.metadata.description) {
+              lines.push(`> ${item.metadata.description}`);
+            }
+            lines.push('');
+          }
+        }
+      }
+      
+      // Add quick modifiers
+      lines.push('## Quick Modifiers Available', '');
+      lines.push('- `ultrathink` - For complex problems needing deep analysis');
+      lines.push('- `megathink` - For critical architecture decisions');
+      lines.push('- `security-first` - Add security considerations');
+      lines.push('- `step-by-step` - Force explicit reasoning');
+      lines.push('');
+      
+      lines.push('---');
+      lines.push('*Use `get_prompt <id>` to load full content of any prompt.*');
+      
+      return { content: [{ type: 'text', text: lines.join('\n') }] };
+    }
+  );
+
+  // get_prompt - Updated description
   server.tool(
     'get_prompt',
-    'Fetch a prompt, template, or any item from the AI library by ID or fuzzy name match',
+    `Fetch a prompt, template, skill, or any item from the AI library.
+    
+    Use this to load:
+    - Full prompts for complex tasks (e.g., "prd-generator", "deep-debugger")
+    - Skills for specific activities (e.g., "code-review-advanced")
+    - Templates for project setup (e.g., "claude-md-full")
+    - Modifiers to enhance responses (e.g., "ultrathink", "megathink")
+    
+    Supports fuzzy matching - "prd" finds "prd-generator".`,
     {
-      name: z.string().describe('The prompt ID (e.g., "prompts/planning/prd-generator") or fuzzy name (e.g., "prd", "debugger")'),
+      name: z.string().describe('The prompt ID (e.g., "prompts/planning/prd-generator") or fuzzy name (e.g., "prd", "debugger", "ultrathink")'),
       format: z.enum(['full', 'body', 'prompt_only']).optional().describe('Output format: full (with metadata), body (content only), prompt_only (just the prompt text)'),
     },
     async ({ name, format = 'full' }) => {
@@ -68,6 +225,52 @@ export function registerLibraryTools(server: McpServer, library: Library, ensure
     }
   );
 
+  // suggest_prompts - Updated to be more proactive
+  server.tool(
+    'suggest_prompts',
+    `PROACTIVE TOOL - Get intelligent prompt suggestions based on task context.
+    
+    Call this when:
+    - User starts a new task or project
+    - You're unsure which prompts would help
+    - User asks for help planning or approaching something
+    
+    Returns ranked suggestions with confidence scores and reasoning.`,
+    {
+      message: z.string().describe('The user\'s request or task description'),
+      limit: z.number().optional().describe('Maximum suggestions to return (default: 5)'),
+    },
+    async ({ message, limit = 5 }) => {
+      await ensureInitialized();
+      const suggestions = library.suggest(message, limit);
+
+      if (suggestions.length === 0) {
+        const searchResults = library.search(message, 3);
+        if (searchResults.length === 0) {
+          return { content: [{ type: 'text', text: 'No suggestions found. Try being more specific.' }] };
+        }
+        const lines = ["# Suggestions (from search)", '', "Couldn't detect a specific intent, but here are some relevant items:", ''];
+        for (const result of searchResults) {
+          lines.push(`- **${result.item.name}** (\`${result.item.id}\`)`);
+        }
+        return { content: [{ type: 'text', text: lines.join('\n') }] };
+      }
+
+      const lines = ['# Recommended Prompts', '', `Based on your message, here are ${suggestions.length} suggestions:`, ''];
+      for (let i = 0; i < suggestions.length; i++) {
+        const s = suggestions[i];
+        const confidence = Math.round(s.confidence * 100);
+        lines.push(`## ${i + 1}. ${s.item.metadata.title || s.item.name}`);
+        lines.push(`**ID:** \`${s.item.id}\``);
+        lines.push(`**Why:** ${s.reason} (${confidence}% confidence)`);
+        if (s.item.metadata.description) lines.push(`> ${s.item.metadata.description}`);
+        lines.push('');
+      }
+      lines.push('---', 'Use `get_prompt <id>` to fetch any of these.');
+      return { content: [{ type: 'text', text: lines.join('\n') }] };
+    }
+  );
+
   // search_prompts
   server.tool(
     'search_prompts',
@@ -99,45 +302,6 @@ export function registerLibraryTools(server: McpServer, library: Library, ensure
         lines.push('');
       }
       lines.push('---', 'Use `get_prompt` with the ID to fetch the full content.');
-      return { content: [{ type: 'text', text: lines.join('\n') }] };
-    }
-  );
-
-  // suggest_prompts
-  server.tool(
-    'suggest_prompts',
-    'Get intelligent prompt suggestions based on what you are trying to do.',
-    {
-      message: z.string().describe('Describe what you are working on (e.g., "I need to build a new authentication feature")'),
-      limit: z.number().optional().describe('Maximum suggestions to return (default: 5)'),
-    },
-    async ({ message, limit = 5 }) => {
-      await ensureInitialized();
-      const suggestions = library.suggest(message, limit);
-
-      if (suggestions.length === 0) {
-        const searchResults = library.search(message, 3);
-        if (searchResults.length === 0) {
-          return { content: [{ type: 'text', text: 'No suggestions found. Try being more specific.' }] };
-        }
-        const lines = ["# Suggestions (from search)", '', "Couldn't detect a specific intent, but here are some relevant items:", ''];
-        for (const result of searchResults) {
-          lines.push(`- **${result.item.name}** (\`${result.item.id}\`)`);
-        }
-        return { content: [{ type: 'text', text: lines.join('\n') }] };
-      }
-
-      const lines = ['# Recommended Prompts', '', `Based on your message, here are ${suggestions.length} suggestions:`, ''];
-      for (let i = 0; i < suggestions.length; i++) {
-        const s = suggestions[i];
-        const confidence = Math.round(s.confidence * 100);
-        lines.push(`## ${i + 1}. ${s.item.metadata.title || s.item.name}`);
-        lines.push(`**ID:** \`${s.item.id}\``);
-        lines.push(`**Why:** ${s.reason} (${confidence}% confidence)`);
-        if (s.item.metadata.description) lines.push(`> ${s.item.metadata.description}`);
-        lines.push('');
-      }
-      lines.push('---', 'Use `get_prompt <id>` to fetch any of these.');
       return { content: [{ type: 'text', text: lines.join('\n') }] };
     }
   );
@@ -183,7 +347,7 @@ export function registerLibraryTools(server: McpServer, library: Library, ensure
   // library_stats
   server.tool(
     'library_stats',
-    'Get statistics about the AI library',
+    'Get statistics about the AI library - useful for understanding what\'s available',
     {},
     async () => {
       await ensureInitialized();
@@ -192,6 +356,20 @@ export function registerLibraryTools(server: McpServer, library: Library, ensure
       for (const [category, count] of Object.entries(stats.byCategory)) {
         lines.push(`- **${category}:** ${count}`);
       }
+      
+      // Add highlights
+      lines.push('', '## Highlights', '');
+      lines.push('**Most Used Prompts:**');
+      lines.push('- `ultrathink` - Deep analysis mode');
+      lines.push('- `prd-generator` - Product requirements');
+      lines.push('- `deep-debugger` - Systematic debugging');
+      lines.push('- `code-review-advanced` - Comprehensive review');
+      lines.push('');
+      lines.push('**Workflows (Chains):**');
+      lines.push('- `new-feature` - 7-step feature development');
+      lines.push('- `bug-fix` - Systematic bug resolution');
+      lines.push('- `security-hardening` - Security audit workflow');
+      
       return { content: [{ type: 'text', text: lines.join('\n') }] };
     }
   );
@@ -199,7 +377,7 @@ export function registerLibraryTools(server: McpServer, library: Library, ensure
   // random_prompt
   server.tool(
     'random_prompt',
-    'Get a random prompt from the library',
+    'Get a random prompt from the library for inspiration',
     {
       category: z.string().optional(),
     },
@@ -222,4 +400,65 @@ export function registerLibraryTools(server: McpServer, library: Library, ensure
       return { content: [{ type: 'text', text: lines.join('\n') }] };
     }
   );
+}
+
+// Helper function to detect task type from user request
+function detectTaskType(request: string): string {
+  const lower = request.toLowerCase();
+  
+  if (lower.match(/build|create|implement|add|make|new feature|develop/)) {
+    return 'build_feature';
+  }
+  if (lower.match(/bug|fix|debug|error|issue|broken|not working|crash/)) {
+    return 'fix_bug';
+  }
+  if (lower.match(/review|check|audit|look at|examine/)) {
+    return 'code_review';
+  }
+  if (lower.match(/architect|design|structure|plan|system|database schema|migrate/)) {
+    return 'architecture';
+  }
+  if (lower.match(/secur|auth|vulnerability|attack|xss|injection|csrf/)) {
+    return 'security';
+  }
+  if (lower.match(/performance|slow|optimize|fast|speed|memory|cpu|scale/)) {
+    return 'performance';
+  }
+  if (lower.match(/document|readme|comment|explain|describe/)) {
+    return 'documentation';
+  }
+  if (lower.match(/test|spec|coverage|jest|vitest|playwright/)) {
+    return 'testing';
+  }
+  if (lower.match(/refactor|clean|improve|simplify|reorganize/)) {
+    return 'refactoring';
+  }
+  
+  return 'general';
+}
+
+// Helper function to get items for task type
+function getItemsForTaskType(library: Library, taskType: string): LibraryItem[] {
+  const mappings: Record<string, string[]> = {
+    'build_feature': ['prompts/planning/prd-generator', 'chains/new-feature', 'snippets/modifiers/step-by-step'],
+    'fix_bug': ['prompts/analysis/deep-debugger', 'skills/debugging', 'chains/bug-fix'],
+    'code_review': ['skills/code-review-advanced', 'snippets/modifiers/critique'],
+    'architecture': ['snippets/modifiers/megathink', 'instructions/personas/senior-engineer'],
+    'security': ['prompts/quality/security-audit', 'chains/security-hardening'],
+    'performance': ['snippets/modifiers/ultrathink'],
+    'documentation': ['templates/docs/readme-template'],
+    'testing': ['skills/testing'],
+    'refactoring': ['snippets/modifiers/step-by-step', 'skills/code-review-advanced'],
+    'general': ['snippets/modifiers/ultrathink', 'snippets/modifiers/step-by-step'],
+  };
+  
+  const ids = mappings[taskType] || mappings['general'];
+  const items: LibraryItem[] = [];
+  
+  for (const id of ids) {
+    const item = library.getItem(id);
+    if (item) items.push(item);
+  }
+  
+  return items;
 }

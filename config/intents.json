@@ -1,0 +1,116 @@
+[
+  {
+    "keywords": ["new feature", "build", "create", "implement", "add feature", "start building"],
+    "intent": "starting new feature",
+    "suggestedItems": ["prompts/planning/prd-generator", "chains/new-feature", "prompts/planning/implementation-plan"],
+    "priority": 10
+  },
+  {
+    "keywords": ["architecture", "design", "structure", "how should i", "organize"],
+    "intent": "architecture planning",
+    "suggestedItems": ["prompts/planning/architecture-analyzer", "contexts/patterns/service-layer"],
+    "priority": 9
+  },
+  {
+    "keywords": ["scope", "too big", "simplify", "mvp", "cut scope"],
+    "intent": "scope reduction",
+    "suggestedItems": ["prompts/planning/scope-killer", "snippets/constraints/mvp-only"],
+    "priority": 9
+  },
+  {
+    "keywords": ["bug", "error", "not working", "broken", "fix", "debug", "crash", "stuck"],
+    "intent": "debugging",
+    "suggestedItems": ["prompts/development/debugger", "skills/debugging", "chains/bug-fix"],
+    "priority": 10
+  },
+  {
+    "keywords": ["refactor", "clean up", "improve code", "tech debt", "messy"],
+    "intent": "refactoring",
+    "suggestedItems": ["prompts/development/code-cleaner", "skills/refactoring", "chains/refactor"],
+    "priority": 9
+  },
+  {
+    "keywords": ["tech debt", "technical debt", "legacy", "old code"],
+    "intent": "tech debt audit",
+    "suggestedItems": ["prompts/development/tech-debt-audit", "chains/refactor"],
+    "priority": 8
+  },
+  {
+    "keywords": ["security", "vulnerability", "secure", "auth", "injection", "xss"],
+    "intent": "security review",
+    "suggestedItems": ["prompts/quality/security-audit", "prompts/quality/security-fixer", "chains/security-hardening"],
+    "priority": 10
+  },
+  {
+    "keywords": ["test", "testing", "coverage", "unit test", "integration test"],
+    "intent": "testing",
+    "suggestedItems": ["skills/testing", "prompts/quality/critical-path-tester", "instructions/workflows/tdd"],
+    "priority": 9
+  },
+  {
+    "keywords": ["review", "code review", "pr review", "pull request"],
+    "intent": "code review",
+    "suggestedItems": ["skills/code-review", "instructions/personas/code-reviewer", "instructions/workflows/pr-review"],
+    "priority": 9
+  },
+  {
+    "keywords": ["deploy", "launch", "production", "go live", "release"],
+    "intent": "deployment",
+    "suggestedItems": ["prompts/quality/pre-launch-checklist", "chains/production-launch"],
+    "priority": 10
+  },
+  {
+    "keywords": ["document", "docs", "readme", "explain", "api spec"],
+    "intent": "documentation",
+    "suggestedItems": ["skills/documentation", "templates/docs/api-spec-template"],
+    "priority": 7
+  },
+  {
+    "keywords": ["pr description", "pull request description", "commit message"],
+    "intent": "PR writing",
+    "suggestedItems": ["skills/pr-description"],
+    "priority": 8
+  },
+  {
+    "keywords": ["setup", "new project", "init", "initialize", "bootstrap", "getting started"],
+    "intent": "project setup",
+    "suggestedItems": ["skills/project-setup", "templates/claude-md/comprehensive"],
+    "priority": 9
+  },
+  {
+    "keywords": ["nextjs", "next.js", "next js", "react"],
+    "intent": "Next.js development",
+    "suggestedItems": ["contexts/stacks/nextjs-14", "instructions/standards/nextjs", "instructions/standards/react"],
+    "priority": 8
+  },
+  {
+    "keywords": ["python", "fastapi", "flask", "django"],
+    "intent": "Python development",
+    "suggestedItems": ["contexts/stacks/fastapi", "instructions/standards/python", "instructions/standards/fastapi"],
+    "priority": 8
+  },
+  {
+    "keywords": ["typescript", "ts", "node", "nodejs"],
+    "intent": "TypeScript/Node development",
+    "suggestedItems": ["instructions/standards/typescript", "instructions/standards/nodejs"],
+    "priority": 8
+  },
+  {
+    "keywords": ["prisma", "database", "db", "orm"],
+    "intent": "database work",
+    "suggestedItems": ["contexts/stacks/prisma", "contexts/patterns/repository-pattern"],
+    "priority": 8
+  },
+  {
+    "keywords": ["think harder", "think more", "complex", "difficult", "tricky", "hard problem"],
+    "intent": "deep thinking",
+    "suggestedItems": ["snippets/modifiers/ultrathink", "snippets/modifiers/be-thorough"],
+    "priority": 10
+  },
+  {
+    "keywords": ["step by step", "explain", "walk through", "show work"],
+    "intent": "step-by-step",
+    "suggestedItems": ["snippets/modifiers/step-by-step", "snippets/modifiers/explain-reasoning"],
+    "priority": 7
+  }
+]

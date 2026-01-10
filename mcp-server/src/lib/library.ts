@@ -39,8 +39,8 @@ const CATEGORIES: LibraryCategory[] = [
   'examples',
 ];
 
-// Intent patterns for smart suggestions
-const INTENT_PATTERNS: IntentPattern[] = [
+// Default intent patterns (fallback)
+const DEFAULT_INTENT_PATTERNS: IntentPattern[] = [
   // Planning & starting
   {
     keywords: ['new feature', 'build', 'create', 'implement', 'add feature', 'start building'],
@@ -148,9 +148,9 @@ const INTENT_PATTERNS: IntentPattern[] = [
   },
   {
     keywords: ['prisma', 'database', 'db', 'orm'],
-    intent: 'database work',
-    suggestedItems: ['contexts/stacks/prisma', 'contexts/patterns/repository-pattern'],
-    priority: 8,
+    "intent": "database work",
+    "suggestedItems": ["contexts/stacks/prisma", "contexts/patterns/repository-pattern"],
+    "priority": 8
   },
 
   // Thinking modes
@@ -175,6 +175,7 @@ export class Library {
   private libraryPath: string;
   private index: LibraryIndex | null = null;
   private debug: boolean;
+  private intentPatterns: IntentPattern[] = DEFAULT_INTENT_PATTERNS;
 
   constructor(libraryPath: string, debug = false) {
     this.libraryPath = libraryPath;
@@ -195,7 +196,25 @@ export class Library {
    */
   async initialize(): Promise<void> {
     this.log('Initializing library from:', this.libraryPath);
+    await this.loadConfig();
     await this.scan();
+  }
+
+  /**
+   * Load configuration from config/intents.json
+   */
+  async loadConfig(): Promise<void> {
+    const configPath = join(this.libraryPath, 'config', 'intents.json');
+    if (existsSync(configPath)) {
+      try {
+        const content = readFileSync(configPath, 'utf-8');
+        const customIntents = JSON.parse(content) as IntentPattern[];
+        this.intentPatterns = [...customIntents, ...DEFAULT_INTENT_PATTERNS];
+        this.log(`Loaded ${customIntents.length} custom intent patterns`);
+      } catch (error) {
+        this.log('Failed to load intent config:', error);
+      }
+    }
   }
 
   /**
@@ -471,7 +490,7 @@ export class Library {
     const seenIds = new Set<string>();
 
     // Check intent patterns
-    for (const pattern of INTENT_PATTERNS) {
+    for (const pattern of this.intentPatterns) {
       const matchedKeywords = pattern.keywords.filter((kw) =>
         normalizedMessage.includes(kw)
       );
