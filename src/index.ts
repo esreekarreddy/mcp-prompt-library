@@ -84,6 +84,9 @@ export interface SearchResult extends Prompt {
 // Cache for parsed prompts
 let promptCache: Map<string, Prompt> | null = null;
 
+/** Check if debug mode is enabled via environment variable */
+const isDebugEnabled = () => process.env.AI_PROMPTS_DEBUG === 'true' || process.env.AI_PROMPTS_DEBUG === '1';
+
 /**
  * Parse a markdown file and extract frontmatter
  */
@@ -106,7 +109,10 @@ function parsePromptFile(filePath: string, category: Category, subcategory: stri
       content: body.trim(),
       filePath
     };
-  } catch {
+  } catch (err) {
+    if (isDebugEnabled()) {
+      console.error('[ai-prompts] Failed to parse prompt file:', filePath, err);
+    }
     return null;
   }
 }
@@ -142,6 +148,7 @@ function scanCategory(category: Category): Prompt[] {
 
 /**
  * Build the full prompt cache
+ * All keys are stored in lowercase for case-insensitive matching
  */
 function buildCache(): Map<string, Prompt> {
   if (promptCache) return promptCache;
@@ -151,14 +158,15 @@ function buildCache(): Map<string, Prompt> {
   for (const category of CATEGORIES) {
     const prompts = scanCategory(category);
     for (const prompt of prompts) {
-      promptCache.set(prompt.id, prompt);
+      // Store by lowercase ID for case-insensitive matching
+      promptCache.set(prompt.id.toLowerCase(), prompt);
       
-      // Also index by aliases
+      // Also index by aliases (already lowercase)
       for (const alias of prompt.aliases) {
         promptCache.set(alias.toLowerCase(), prompt);
       }
       
-      // Index by filename
+      // Index by filename (lowercase)
       const filename = basename(prompt.filePath, '.md');
       promptCache.set(filename.toLowerCase(), prompt);
     }
@@ -193,7 +201,7 @@ export function getPrompt(nameOrId: string): Prompt | null {
     return cache.get(normalized)!;
   }
   
-  // Try with common prefixes
+  // Try with common prefixes (all keys are already lowercase)
   for (const category of CATEGORIES) {
     const withPrefix = `${category}/${normalized}`;
     for (const [key, prompt] of cache) {
@@ -203,7 +211,7 @@ export function getPrompt(nameOrId: string): Prompt | null {
     }
   }
   
-  // Fuzzy match (contains)
+  // Fuzzy match (contains) - keys are already lowercase
   for (const [key, prompt] of cache) {
     if (key.includes(normalized) || prompt.title.toLowerCase().includes(normalized)) {
       return prompt;

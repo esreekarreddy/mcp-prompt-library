@@ -14,7 +14,21 @@ const VALID_CATEGORIES: LibraryCategory[] = [
   'examples',
 ];
 
-export function registerLibraryTools(server: McpServer, library: Library, ensureInitialized: () => Promise<void>) {
+/**
+ * Options for library tool registration
+ */
+export interface LibraryToolOptions {
+  /** When true, disables save_to_library tool */
+  readOnly?: boolean;
+}
+
+export function registerLibraryTools(
+  server: McpServer, 
+  library: Library, 
+  ensureInitialized: () => Promise<void>,
+  options: LibraryToolOptions = {}
+) {
+  const { readOnly = false } = options;
   
   // ============================================================
   // CORE TOOL: enhance_prompt - THE AUTO-ENHANCER
@@ -306,43 +320,54 @@ export function registerLibraryTools(server: McpServer, library: Library, ensure
     }
   );
 
-  // save_to_library
-  server.tool(
-    'save_to_library',
-    'Save a new prompt, snippet, or template to the AI library for future use',
-    {
-      category: z.enum(['prompts', 'snippets', 'templates', 'skills', 'instructions', 'contexts', 'examples']),
-      subcategory: z.string().optional(),
-      name: z.string(),
-      content: z.string(),
-      title: z.string().optional(),
-      description: z.string().optional(),
-      tags: z.array(z.string()).optional(),
-    },
-    async ({ category, subcategory, name, content, title, description, tags }) => {
-      await ensureInitialized();
-      const metadata: Record<string, unknown> = {};
-      if (title) metadata.title = title;
-      if (description) metadata.description = description;
-      if (tags?.length) metadata.tags = tags;
+  // save_to_library (only registered if not in read-only mode)
+  if (!readOnly) {
+    server.tool(
+      'save_to_library',
+      'Save a new prompt, snippet, or template to the AI library for future use. Disabled in read-only mode.',
+      {
+        category: z.enum(['prompts', 'snippets', 'templates', 'skills', 'instructions', 'contexts', 'examples']),
+        subcategory: z.string().max(64).optional().describe('Subcategory folder (max 64 chars, no path separators)'),
+        name: z.string().max(64).describe('Prompt name (max 64 chars)'),
+        content: z.string().max(200000).describe('Prompt content (max 200KB)'),
+        title: z.string().max(200).optional(),
+        description: z.string().max(1000).optional(),
+        tags: z.array(z.string().max(50)).max(20).optional(),
+      },
+      async ({ category, subcategory, name, content, title, description, tags }) => {
+        await ensureInitialized();
+        
+        // Validate subcategory doesn't contain path traversal attempts
+        if (subcategory && /(\.\.|[/\\])/.test(subcategory)) {
+          return { 
+            content: [{ type: 'text', text: 'Invalid subcategory: must not contain path separators or "..".' }], 
+            isError: true 
+          };
+        }
+        
+        const metadata: Record<string, unknown> = {};
+        if (title) metadata.title = title;
+        if (description) metadata.description = description;
+        if (tags?.length) metadata.tags = tags;
 
-      const item = library.savePrompt({
-        category,
-        subcategory,
-        name: name.replace(/\.md$/, '').replace(/[^a-zA-Z0-9-_]/g, '-'),
-        content,
-        metadata,
-      });
+        const item = library.savePrompt({
+          category,
+          subcategory,
+          name: name.replace(/\.md$/, '').replace(/[^a-zA-Z0-9-_]/g, '-'),
+          content,
+          metadata,
+        });
 
-      if (!item) return { content: [{ type: 'text', text: 'Failed to save prompt.' }], isError: true };
-      return {
-        content: [{
-          type: 'text',
-          text: `# Saved to Library\n\n**ID:** \`${item.id}\`\n**Path:** ${item.relativePath}\n\nThe item is now available in your AI library.`
-        }],
-      };
-    }
-  );
+        if (!item) return { content: [{ type: 'text', text: 'Failed to save prompt. The path may be invalid or outside the library.' }], isError: true };
+        return {
+          content: [{
+            type: 'text',
+            text: `# Saved to Library\n\n**ID:** \`${item.id}\`\n**Path:** ${item.relativePath}\n\nThe item is now available in your AI library.`
+          }],
+        };
+      }
+    );
+  }
 
   // library_stats
   server.tool(

@@ -9,7 +9,8 @@
  * Usage:
  *   ai-library-mcp                    # Uses default library path (parent directory)
  *   ai-library-mcp /path/to/library   # Custom library path
- *   ai-library-mcp --debug            # Enable debug logging
+ *   ai-library-mcp --debug, -d        # Enable debug logging
+ *   ai-library-mcp --read-only, -r    # Read-only mode (disables save_to_library)
  */
 
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
@@ -24,6 +25,7 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 // Parse arguments
 const args = process.argv.slice(2);
 const debug = args.includes('--debug') || args.includes('-d');
+const readOnly = args.includes('--read-only') || args.includes('-r');
 const nonFlagArgs = args.filter((a) => !a.startsWith('-'));
 
 // Determine library path
@@ -58,11 +60,12 @@ if (!existsSync(promptsPath)) {
 console.error('AI Library MCP Server');
 console.error(`Library: ${libraryPath}`);
 console.error(`Debug: ${debug}`);
+console.error(`Read-only: ${readOnly}`);
 
 // Create and start server
 async function main() {
   try {
-    const server = createServer(libraryPath, debug);
+    const server = createServer(libraryPath, { debug, readOnly });
     const transport = new StdioServerTransport();
 
     console.error('Starting server...');

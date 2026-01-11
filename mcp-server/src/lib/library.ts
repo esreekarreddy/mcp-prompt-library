@@ -4,7 +4,7 @@
 
 import { readFileSync, statSync, existsSync, writeFileSync, mkdirSync } from 'fs';
 import { readFile, stat } from 'fs/promises';
-import { join, relative, dirname, basename, extname } from 'path';
+import { join, relative, dirname, basename, extname, resolve } from 'path';
 import { glob } from 'glob';
 import chokidar, { type FSWatcher } from 'chokidar';
 import type {
@@ -237,17 +237,22 @@ export class Library {
       byCategory.set(cat, []);
     }
 
-    const pattern = '**/*.md';
-    const files = await glob(pattern, {
+    // SECURITY: Only scan known category folders to prevent exposing unintended files
+    const categoryPatterns = CATEGORIES.map(cat => `${cat}/**/*.md`);
+    const files = await glob(categoryPatterns, {
       cwd: this.libraryPath,
-      ignore: ['node_modules/**', 'mcp-server/**', '.git/**'],
+      ignore: [
+        '**/_index.md',
+        '**/README.md', 
+        'node_modules/**', 
+        'mcp-server/**', 
+        '.git/**'
+      ],
     });
 
-    this.log(`Found ${files.length} markdown files`);
+    this.log(`Found ${files.length} markdown files in ${CATEGORIES.length} categories`);
 
-    const filesToParse = files.filter(
-      (file) => !file.endsWith('_index.md') && file !== 'README.md'
-    );
+    const filesToParse = files;
 
     const BATCH_SIZE = 50;
     for (let i = 0; i < filesToParse.length; i += BATCH_SIZE) {
@@ -579,23 +584,90 @@ export class Library {
   }
 
   /**
+   * Sanitize a path segment to prevent path traversal attacks.
+   * Removes directory separators, parent directory references, and invalid characters.
+   * Also handles null bytes, truncates long names, and normalizes the result.
+   */
+  private sanitizePathSegment(input: string): string {
+    const MAX_LENGTH = 64;
+    
+    const cleaned = input
+      .replace(/\x00/g, '')        // Remove null bytes
+      .replace(/[/\\]/g, '-')      // Replace directory separators with dashes
+      .replace(/\.\./g, '')        // Remove parent directory references
+      .replace(/^\.+/, '')         // Remove leading dots
+      .replace(/[<>:"|?*]/g, '-')  // Remove invalid filename characters
+      .replace(/-+/g, '-')         // Collapse multiple dashes
+      .replace(/^-|-$/g, '')       // Remove leading/trailing dashes
+      .trim()
+      .slice(0, MAX_LENGTH);       // Truncate to max length
+
+    return cleaned || 'unnamed';
+  }
+
+  /**
+   * Check if a path is safely within the library root (sandbox check).
+   * Prevents path traversal attacks.
+   */
+  private isPathWithinLibrary(fullPath: string): boolean {
+    const normalizedPath = resolve(fullPath).replace(/\\/g, '/');
+    const normalizedRoot = resolve(this.libraryPath).replace(/\\/g, '/');
+    const rootWithSlash = normalizedRoot.endsWith('/') ? normalizedRoot : normalizedRoot + '/';
+    
+    return normalizedPath.startsWith(rootWithSlash) || normalizedPath === normalizedRoot;
+  }
+
+  /**
    * Save a new prompt to the library
    */
   savePrompt(request: SavePromptRequest): LibraryItem | null {
-    const { category, subcategory, name, content, metadata } = request;
+    const { category, content, metadata } = request;
+    
+    // Sanitize name and subcategory to prevent path traversal
+    const sanitizedName = this.sanitizePathSegment(request.name.replace(/\.md$/, ''));
+    const sanitizedSubcategory = request.subcategory 
+      ? this.sanitizePathSegment(request.subcategory) 
+      : undefined;
+
+    // Log if sanitization changed the values
+    if (request.name !== sanitizedName) {
+      this.log('Name sanitized:', request.name, '→', sanitizedName);
+    }
+    if (request.subcategory && request.subcategory !== sanitizedSubcategory) {
+      this.log('Subcategory sanitized:', request.subcategory, '→', sanitizedSubcategory);
+    }
+
+    // Validate category is in allowed list
+    if (!CATEGORIES.includes(category)) {
+      this.log('Invalid category:', category);
+      return null;
+    }
 
     // Build path
     let relativePath: string;
-    if (subcategory) {
-      relativePath = `${category}/${subcategory}/${name}.md`;
+    if (sanitizedSubcategory) {
+      relativePath = `${category}/${sanitizedSubcategory}/${sanitizedName}.md`;
     } else {
-      relativePath = `${category}/${name}.md`;
+      relativePath = `${category}/${sanitizedName}.md`;
     }
 
     const fullPath = join(this.libraryPath, relativePath);
 
+    // SECURITY: Verify the resolved path is within the library root
+    if (!this.isPathWithinLibrary(fullPath)) {
+      this.log('Blocked save outside library root:', { fullPath, relativePath });
+      return null;
+    }
+
     // Ensure directory exists
     const dir = dirname(fullPath);
+    
+    // SECURITY: Also verify directory is within library root
+    if (!this.isPathWithinLibrary(dir)) {
+      this.log('Blocked directory creation outside library root:', dir);
+      return null;
+    }
+    
     if (!existsSync(dir)) {
       mkdirSync(dir, { recursive: true });
     }

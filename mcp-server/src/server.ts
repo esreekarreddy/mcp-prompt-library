@@ -31,9 +31,30 @@ const VALID_CATEGORIES: LibraryCategory[] = [
 ];
 
 /**
+ * Server options for createServer
+ */
+export interface ServerOptions {
+  /** Enable debug logging */
+  debug?: boolean;
+  /** 
+   * Read-only mode - disables save_to_library tool.
+   * Recommended for production/CI environments.
+   */
+  readOnly?: boolean;
+}
+
+/**
  * Create and configure the MCP server
  */
-export function createServer(libraryPath: string, debug = false): McpServer {
+export function createServer(libraryPath: string, options: ServerOptions | boolean = false): McpServer {
+  // Support legacy boolean signature for backwards compatibility
+  const opts: ServerOptions = typeof options === 'boolean' 
+    ? { debug: options } 
+    : options;
+  
+  const debug = opts.debug ?? false;
+  const readOnly = opts.readOnly ?? false;
+
   const server = new McpServer({
     name: 'ai-library',
     version: '1.0.0',
@@ -152,7 +173,8 @@ export function createServer(libraryPath: string, debug = false): McpServer {
   // ============================================================
 
   log('Registering library tools...');
-  registerLibraryTools(server, library, ensureInitialized);
+  log(`Read-only mode: ${readOnly ? 'ENABLED' : 'disabled'}`);
+  registerLibraryTools(server, library, ensureInitialized, { readOnly });
 
   log('Registering chain tools...');
   registerChainTools(server, library, chainManager, ensureInitialized);

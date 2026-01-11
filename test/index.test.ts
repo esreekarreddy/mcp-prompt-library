@@ -42,6 +42,27 @@ describe('getPrompt', () => {
     expect(prompt?.content).toBeDefined();
     expect(prompt?.content).not.toContain('---');
   });
+
+  it('is case-insensitive when matching', () => {
+    const lower = getPrompt('prd-generator');
+    const upper = getPrompt('PRD-GENERATOR');
+    const mixed = getPrompt('PrD-GeNeRaToR');
+    
+    expect(lower).not.toBeNull();
+    expect(upper).not.toBeNull();
+    expect(mixed).not.toBeNull();
+    expect(lower?.id).toBe(upper?.id);
+    expect(lower?.id).toBe(mixed?.id);
+  });
+
+  it('is case-insensitive for full ID paths', () => {
+    const lower = getPrompt('prompts/planning/prd-generator');
+    const upper = getPrompt('PROMPTS/PLANNING/PRD-GENERATOR');
+    
+    expect(lower).not.toBeNull();
+    expect(upper).not.toBeNull();
+    expect(lower?.id).toBe(upper?.id);
+  });
 });
 
 describe('searchPrompts', () => {
