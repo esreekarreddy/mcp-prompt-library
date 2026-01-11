@@ -1,6 +1,6 @@
 {
   "name": "@esreekarreddy/ai-prompts",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "94+ curated AI prompts, workflows, and coding standards for developers. Battle-tested templates for PRDs, debugging, security audits, code reviews, and more.",
   "type": "module",
   "main": "dist/index.js",
