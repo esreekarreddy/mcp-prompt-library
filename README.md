@@ -45,6 +45,30 @@ AI assistants are powerful, but they're only as good as the prompts you give the
 
 ## Quick Start
 
+### 📦 Usage as npm Package (Best for Developers)
+
+Install the library to use prompts programmatically in your own tools:
+
+```bash
+npm install @esreekarreddy/ai-prompts
+```
+
+```typescript
+import { getPrompt, searchPrompts, composePrompts } from '@esreekarreddy/ai-prompts';
+
+// 1. Get a specific prompt
+const prd = getPrompt('prd-generator');
+console.log(prd.content);
+
+// 2. Search for prompts
+const securityPrompts = searchPrompts('security');
+
+// 3. Compose a custom prompt with modifiers
+const complexTask = composePrompts(['prd-generator', 'ultrathink', 'security-first']);
+```
+
+### 🖥️ Usage as MCP Server (Best for Cursor/Claude)
+
 ### 1. Clone & Build
 
 ```bash
