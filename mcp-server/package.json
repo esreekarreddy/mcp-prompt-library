@@ -35,11 +35,11 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/sreekarreddy/mcp-prompt-library.git"
+    "url": "git+https://github.com/esreekarreddy/mcp-prompt-library.git"
   },
-  "homepage": "https://github.com/sreekarreddy/mcp-prompt-library#readme",
+  "homepage": "https://github.com/esreekarreddy/mcp-prompt-library#readme",
   "bugs": {
-    "url": "https://github.com/sreekarreddy/mcp-prompt-library/issues"
+    "url": "https://github.com/esreekarreddy/mcp-prompt-library/issues"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.25.2",
